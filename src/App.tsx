@@ -224,7 +224,7 @@ export default function App() {
                 Kevin Bell
               </h1>
               <p className="text-slate-400 text-lg max-w-xl leading-relaxed mb-8">
-                Master's student in Computer Science at Weber State University. Passionate about free/libre open-source software, AI, cloud computing, and building things that matter — fast.
+                Software Engineer at the U.S. Department of War. M.S. Computer Science graduate with a Computational Data Science &amp; Machine Learning certification. Passionate about free/libre open-source software, AI, and building things that matter — fast.
               </p>
 
               <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
@@ -253,7 +253,7 @@ export default function App() {
               </div>
 
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                {['Weber State University', 'FLOSS Advocate', 'Hackathon Winner', 'Utah'].map((tag) => (
+                {['U.S. Dept. of War', 'FLOSS Advocate', 'Hackathon Winner', 'Utah'].map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 bg-white/5 border border-white/10 text-slate-400 text-xs rounded-full"
@@ -281,19 +281,25 @@ export default function App() {
           <div className="flex items-center gap-2">
             <Award size={16} className="text-emerald-600 flex-shrink-0" />
             <span className="text-slate-700">
-              <span className="font-semibold">M.S. Computer Science</span> — Weber State University (2025–2026)
+              <span className="font-semibold">Software Engineer</span> — U.S. Department of War
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Award size={16} className="text-emerald-600 flex-shrink-0" />
             <span className="text-slate-700">
-              <span className="font-semibold">B.S. Computer Science</span> — Weber State University (2023)
+              <span className="font-semibold">M.S. Computer Science</span> — Weber State University
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Award size={16} className="text-emerald-600 flex-shrink-0" />
             <span className="text-slate-700">
-              <span className="font-semibold">HackUSU 2026</span> — 2nd Place, Tech Start-Up Category
+              <span className="font-semibold">Computational Data Science &amp; ML Cert.</span> — Weber State University
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Award size={16} className="text-emerald-600 flex-shrink-0" />
+            <span className="text-slate-700">
+              <span className="font-semibold">B.S. Computer Science</span> — Weber State University
             </span>
           </div>
         </div>
