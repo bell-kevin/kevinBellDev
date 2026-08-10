@@ -1,7 +1,14 @@
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ---------------------------------------------------------------------------
    Progressive enhancement.
+
+   Tailwind is compiled into this stylesheet at build time on purpose. The
+   CDN build (cdn.tailwindcss.com) generates its styles by running JavaScript
+   against the live DOM, so with scripting disabled it produces no CSS at all
+   and the page renders completely unstyled.
 
    The inline script in index.html puts `js` on <html>. Every rule that assumes
    JavaScript is scoped to `.js`, so a browser with scripting disabled simply

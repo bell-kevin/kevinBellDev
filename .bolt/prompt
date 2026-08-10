@@ -6,7 +6,8 @@ Use icons from lucide-react for logos.
 
 This site must keep working with JavaScript disabled. Preserve the following when editing:
 
-- The build is `vite build && node scripts/prerender.mjs`. The prerender step renders `src/entry-server.tsx` into `dist/index.html` so the shipped page contains real markup. Do not remove it or reduce `build` back to plain `vite build`.
+- The `prerender()` plugin in `vite.config.ts` renders `src/entry-server.tsx` into `dist/index.html` at build time, so the shipped page contains real markup instead of an empty `<div id="root">`. Keep it in the `plugins` array. It must stay a Vite plugin — deploy pipelines run `vite build` directly, so a separate `&& node script` step in the npm `build` script never runs and silently ships a blank page.
+- Tailwind is compiled at build time (`tailwindcss` v3 + `postcss.config.js` + `tailwind.config.js`). Never replace it with the `cdn.tailwindcss.com` script: that CDN generates CSS by running JavaScript against the live DOM, so with scripting disabled the page renders completely unstyled. Tailwind v4 is deliberately avoided here — its native `lightningcss`/oxide binaries have repeatedly failed to install in this build environment.
 - `src/main.tsx` hydrates existing markup (`hydrateRoot`) when `#root` already has children, and adds `js`/`js-ready` to `<html>`. Keep both.
 - The bootstrap script in `index.html` adds `js` to `<html>` and removes it again at DOMContentLoaded if the bundle never ran. Keep it inline in `<head>`.
 - In `src/index.css`, anything that depends on JavaScript is scoped to `.js`, and the no-JS header styling is scoped to `html:not(.js)`. Never hide content by default — only under `.js`.
