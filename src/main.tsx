@@ -17,3 +17,8 @@ if (container.hasChildNodes()) {
 } else {
   createRoot(container).render(app);
 }
+
+// Tells the bootstrap script in index.html that the bundle really did run, so
+// it leaves html.js in place. Re-adding `js` covers the case where the check
+// already fired and stripped it.
+document.documentElement.classList.add('js', 'js-ready');

@@ -89,11 +89,17 @@ function useInView(threshold = 0.15) {
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
+    // Without an observer there is nothing to trigger the reveal, so show the
+    // section rather than animating it in — never leave content hidden.
+    if (typeof IntersectionObserver === 'undefined' || !ref.current) {
+      setInView(true);
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setInView(true); },
       { threshold }
     );
-    if (ref.current) observer.observe(ref.current);
+    observer.observe(ref.current);
     return () => observer.disconnect();
   }, [threshold]);
 

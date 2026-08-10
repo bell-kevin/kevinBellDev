@@ -20,20 +20,41 @@ html {
   }
 }
 
-/* Only the JS build has a fixed header for jump targets to hide behind. */
-.js [id] {
+/* Both builds keep the header pinned, so jump targets need to clear it. */
+[id] {
   scroll-margin-top: 4.5rem;
 }
 
-/* The header restyles itself on scroll (white text -> dark text). Without JS
-   that never happens, so it stays absolute over the dark hero and scrolls
-   away, instead of leaving white links stranded on the white sections. */
-.site-header {
-  position: absolute;
+/* The JS build swaps the header from transparent to white-on-scroll, so it can
+   stay fixed over the hero and read correctly against the light sections
+   below.
+
+   Without JS that swap never happens, so a transparent header would strand
+   white links on white content. Rather than drop the nav entirely, give the
+   no-JS header its own solid dark bar: it matches the slate-900 hero it sits
+   above, keeps the white links readable over every section, and — unlike an
+   absolutely positioned header — stays reachable after you scroll.
+
+   The bar is fully opaque slate-900 on purpose: it sits in the flow directly
+   above the hero, so any translucency would blend with the white page
+   underneath and wash the bar out to grey instead of matching the hero.
+
+   Everything here is scoped to `html:not(.js)` so the JS build keeps driving
+   the header entirely through its own Tailwind classes. */
+html:not(.js) .site-header {
+  position: sticky;
+  background-color: #0f172a;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .js .site-header {
   position: fixed;
+}
+
+/* The no-JS header sits in the flow rather than over the hero, so take its
+   height back out of the hero to keep the first screen exactly one viewport. */
+html:not(.js) #about {
+  min-height: calc(100vh - 4rem);
 }
 
 /* Scroll-reveal. Sections are only hidden up front when JavaScript is present

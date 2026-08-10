@@ -3,3 +3,11 @@ For all designs I ask you to make, have them be beautiful, not cookie cutter. Ma
 By default, this template supports JSX syntax with Tailwind CSS classes, React hooks, and Lucide React for icons. Do not install other packages for UI themes, icons, etc unless absolutely necessary or I request them.
 
 Use icons from lucide-react for logos.
+
+This site must keep working with JavaScript disabled. Preserve the following when editing:
+
+- The build is `vite build && node scripts/prerender.mjs`. The prerender step renders `src/entry-server.tsx` into `dist/index.html` so the shipped page contains real markup. Do not remove it or reduce `build` back to plain `vite build`.
+- `src/main.tsx` hydrates existing markup (`hydrateRoot`) when `#root` already has children, and adds `js`/`js-ready` to `<html>`. Keep both.
+- The bootstrap script in `index.html` adds `js` to `<html>` and removes it again at DOMContentLoaded if the bundle never ran. Keep it inline in `<head>`.
+- In `src/index.css`, anything that depends on JavaScript is scoped to `.js`, and the no-JS header styling is scoped to `html:not(.js)`. Never hide content by default — only under `.js`.
+- Navigation is plain `<a href="#section">` anchors and the mobile menu is driven by the `#menu-toggle` checkbox, not React state. Do not replace either with click handlers or `scrollIntoView()`.
