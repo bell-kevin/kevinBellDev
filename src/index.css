@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
 /* ---------------------------------------------------------------------------
    Progressive enhancement.
@@ -88,7 +86,7 @@ html {
 /* The checkbox itself is visually hidden, so mirror its focus ring onto the
    hamburger label for keyboard users. */
 #menu-toggle:focus-visible ~ * .menu-button {
-  outline: 2px solid #34d399;
+  outline: 2px solid var(--color-emerald-400);
   outline-offset: 4px;
   border-radius: 0.25rem;
 }
