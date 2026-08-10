@@ -84,19 +84,32 @@ html:not(.js) #about {
 }
 
 /* Mobile menu, driven by a checkbox so it opens and closes without JS.
-   With JS, tapping a link also unchecks it (see App.tsx). */
+   With JS, tapping a link also unchecks it (see App.tsx).
+
+   `visibility: hidden` is what actually takes the collapsed menu out of play:
+   clipping it with max-height/overflow only hides it visually, leaving its five
+   links in the keyboard tab order and the accessibility tree. It is transitioned
+   with a 0s delay of 0.3s so it flips back to visible immediately on open but
+   waits for the collapse to finish on close, keeping the fade intact. */
 .mobile-menu {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
+  visibility: hidden;
   transition:
     max-height 0.3s ease,
-    opacity 0.3s ease;
+    opacity 0.3s ease,
+    visibility 0s linear 0.3s;
 }
 
 #menu-toggle:checked ~ .mobile-menu {
   max-height: 20rem;
   opacity: 1;
+  visibility: visible;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.3s ease,
+    visibility 0s;
 }
 
 .menu-icon-close {
