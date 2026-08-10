@@ -1,3 +1,92 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Progressive enhancement.
+
+   The inline script in index.html puts `js` on <html>. Every rule that assumes
+   JavaScript is scoped to `.js`, so a browser with scripting disabled simply
+   never matches it and gets the plain, working version of the page.
+   --------------------------------------------------------------------------- */
+
+/* Anchor navigation instead of scrollIntoView(), so the nav works with or
+   without JS and section links are shareable. */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Only the JS build has a fixed header for jump targets to hide behind. */
+.js [id] {
+  scroll-margin-top: 4.5rem;
+}
+
+/* The header restyles itself on scroll (white text -> dark text). Without JS
+   that never happens, so it stays absolute over the dark hero and scrolls
+   away, instead of leaving white links stranded on the white sections. */
+.site-header {
+  position: absolute;
+}
+
+.js .site-header {
+  position: fixed;
+}
+
+/* Scroll-reveal. Sections are only hidden up front when JavaScript is present
+   to reveal them again; otherwise they render visible. */
+.reveal {
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.js .reveal:not(.is-visible) {
+  opacity: 0;
+  transform: translateY(2rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal:not(.is-visible) {
+    transform: none;
+  }
+}
+
+/* Mobile menu, driven by a checkbox so it opens and closes without JS.
+   With JS, tapping a link also unchecks it (see App.tsx). */
+.mobile-menu {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.3s ease;
+}
+
+#menu-toggle:checked ~ .mobile-menu {
+  max-height: 20rem;
+  opacity: 1;
+}
+
+.menu-icon-close {
+  display: none;
+}
+
+#menu-toggle:checked ~ * .menu-icon-open {
+  display: none;
+}
+
+#menu-toggle:checked ~ * .menu-icon-close {
+  display: block;
+}
+
+/* The checkbox itself is visually hidden, so mirror its focus ring onto the
+   hamburger label for keyboard users. */
+#menu-toggle:focus-visible ~ * .menu-button {
+  outline: 2px solid var(--color-emerald-400);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+}

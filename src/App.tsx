@@ -118,18 +118,21 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const menuToggle = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const scrollTo = (id: string) => {
-    setMenuOpen(false);
-    document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Navigation itself is plain anchor links, so it works with scripting off.
+  // This only collapses the mobile menu after a tap; without JS the menu stays
+  // open behind the jump, which is harmless.
+  const closeMenu = () => {
+    if (menuToggle.current) menuToggle.current.checked = false;
   };
 
   const projectsAnim = useInView();
@@ -141,58 +144,67 @@ export default function App() {
     <div className="font-sans text-slate-800 antialiased">
       {/* Nav */}
       <header
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        className={`site-header top-0 inset-x-0 z-50 transition-all duration-300 ${
           scrolled ? 'bg-white/95 backdrop-blur shadow-sm border-b border-slate-100' : 'bg-transparent'
         }`}
       >
+        {/* The mobile menu is opened by this checkbox rather than by state, so
+            it still works when JavaScript is unavailable. Styling lives in
+            index.css alongside the other progressive-enhancement rules. */}
+        <input
+          type="checkbox"
+          id="menu-toggle"
+          ref={menuToggle}
+          className="sr-only"
+          aria-label="Toggle navigation menu"
+          aria-controls="mobile-menu"
+        />
+
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <button
-            onClick={() => scrollTo('about')}
+          <a
+            href="#about"
             className={`text-lg font-bold tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}
           >
             Kevin Bell
-          </button>
+          </a>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map((link) => (
-              <button
+              <a
                 key={link}
-                onClick={() => scrollTo(link)}
+                href={`#${link.toLowerCase()}`}
                 className={`text-sm font-medium transition-colors hover:text-emerald-500 ${
                   scrolled ? 'text-slate-600' : 'text-white/80'
                 }`}
               >
                 {link}
-              </button>
+              </a>
             ))}
           </nav>
 
           {/* Mobile hamburger */}
-          <button
-            className={`md:hidden transition-colors ${scrolled ? 'text-slate-700' : 'text-white'}`}
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
+          <label
+            htmlFor="menu-toggle"
+            className={`menu-button md:hidden cursor-pointer transition-colors ${scrolled ? 'text-slate-700' : 'text-white'}`}
           >
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+            <Menu size={22} className="menu-icon-open" aria-hidden="true" />
+            <X size={22} className="menu-icon-close" aria-hidden="true" />
+          </label>
         </div>
 
         {/* Mobile menu */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 bg-white border-b border-slate-100 ${
-            menuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
+        <div id="mobile-menu" className="mobile-menu md:hidden bg-white border-b border-slate-100">
           <nav className="flex flex-col px-6 py-4 gap-4">
             {NAV_LINKS.map((link) => (
-              <button
+              <a
                 key={link}
-                onClick={() => scrollTo(link)}
+                href={`#${link.toLowerCase()}`}
+                onClick={closeMenu}
                 className="text-left text-slate-700 text-sm font-medium hover:text-emerald-500 transition-colors"
               >
                 {link}
-              </button>
+              </a>
             ))}
           </nav>
         </div>
@@ -216,7 +228,7 @@ export default function App() {
             <img
               src={`https://avatars.githubusercontent.com/u/8269880?v=4`}
               alt="Kevin Bell"
-              className="w-32 h-32 rounded-2xl ring-4 ring-emerald-500/40 shadow-2xl object-cover flex-shrink-0"
+              className="w-32 h-32 rounded-2xl ring-4 ring-emerald-500/40 shadow-2xl object-cover shrink-0"
             />
             <div className="text-center md:text-left">
               <p className="text-emerald-400 font-mono text-sm tracking-widest uppercase mb-3">Software Engineer</p>
@@ -244,12 +256,12 @@ export default function App() {
                 >
                   <Linkedin size={16} /> LinkedIn
                 </a>
-                <button
-                  onClick={() => scrollTo('Contact')}
+                <a
+                  href="#contact"
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-emerald-500/25"
                 >
                   <Mail size={16} /> Get in Touch
-                </button>
+                </a>
               </div>
 
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
@@ -266,38 +278,38 @@ export default function App() {
           </div>
         </div>
 
-        <button
-          onClick={() => scrollTo('Projects')}
+        <a
+          href="#projects"
           className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500 hover:text-emerald-400 transition-colors animate-bounce"
-          aria-label="Scroll down"
+          aria-label="Skip to projects"
         >
           <ChevronDown size={28} />
-        </button>
+        </a>
       </div>
 
       {/* Education banner */}
       <div className="bg-emerald-50 border-y border-emerald-100 py-5 px-6">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center gap-6 justify-center md:justify-between text-sm">
           <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 flex-shrink-0" />
+            <Award size={16} className="text-emerald-600 shrink-0" />
             <span className="text-slate-700">
               <span className="font-semibold">Software Engineer</span> — U.S. Department of War
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 flex-shrink-0" />
+            <Award size={16} className="text-emerald-600 shrink-0" />
             <span className="text-slate-700">
               <span className="font-semibold">M.S. Computer Science</span> — Weber State University
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 flex-shrink-0" />
+            <Award size={16} className="text-emerald-600 shrink-0" />
             <span className="text-slate-700">
               <span className="font-semibold">Computational Data Science &amp; ML Cert.</span> — Weber State University
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 flex-shrink-0" />
+            <Award size={16} className="text-emerald-600 shrink-0" />
             <span className="text-slate-700">
               <span className="font-semibold">B.S. Computer Science</span> — Weber State University
             </span>
@@ -309,7 +321,7 @@ export default function App() {
       <Section id="projects" className="bg-white">
         <div
           ref={projectsAnim.ref}
-          className={`transition-all duration-700 ${projectsAnim.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+          className={`reveal ${projectsAnim.inView ? 'is-visible' : ''}`}
         >
           <SectionHeading>Projects</SectionHeading>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -326,7 +338,7 @@ export default function App() {
                   <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
                     {project.badge}
                   </span>
-                  <ExternalLink size={14} className="text-slate-300 group-hover:text-emerald-500 transition-colors flex-shrink-0 mt-0.5" />
+                  <ExternalLink size={14} className="text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0 mt-0.5" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
                   {project.title}
@@ -356,7 +368,7 @@ export default function App() {
       <Section id="skills" className="bg-slate-50">
         <div
           ref={skillsAnim.ref}
-          className={`transition-all duration-700 ${skillsAnim.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+          className={`reveal ${skillsAnim.inView ? 'is-visible' : ''}`}
         >
           <SectionHeading>Skills</SectionHeading>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -395,7 +407,7 @@ export default function App() {
       <Section id="volunteering" className="bg-white">
         <div
           ref={volunteeringAnim.ref}
-          className={`transition-all duration-700 ${volunteeringAnim.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+          className={`reveal ${volunteeringAnim.inView ? 'is-visible' : ''}`}
         >
           <SectionHeading>Volunteering</SectionHeading>
           <div className="grid md:grid-cols-2 gap-8">
@@ -408,7 +420,7 @@ export default function App() {
                 <ul className="space-y-2">
                   {v.roles.map((role) => (
                     <li key={role} className="flex items-start gap-2 text-slate-600 text-sm">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                       {role}
                     </li>
                   ))}
@@ -423,7 +435,7 @@ export default function App() {
       <Section id="contact" className="bg-slate-900">
         <div
           ref={contactAnim.ref}
-          className={`transition-all duration-700 ${contactAnim.inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+          className={`reveal ${contactAnim.inView ? 'is-visible' : ''}`}
         >
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-white mb-4">Let's Connect</h2>
@@ -456,7 +468,9 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-slate-950 text-slate-500 text-sm text-center py-6 px-6">
-        <p>
+        {/* Prerendered at build time; the client may render a newer year, which
+            is a harmless difference rather than a hydration error. */}
+        <p suppressHydrationWarning>
           Built with care &mdash; Kevin Bell &copy; {new Date().getFullYear()} &mdash;{' '}
           <a
             href="https://github.com/bell-kevin"
