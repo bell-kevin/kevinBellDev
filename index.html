@@ -24,9 +24,38 @@
       content="Software Engineer at the U.S. Department of Defense. Computer science, data, and free/libre open-source software."
     />
     <meta name="color-scheme" content="light dark" />
+    <!-- Apply a saved preference before paint. CSS handles the OS preference. -->
+    <script>
+      try {
+        var theme = localStorage.getItem('kevinbell-theme');
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch (_) {
+        // The default Auto theme works when storage is unavailable.
+      }
+      // Native controls remain usable even if the main bundle fails to load.
+      document.addEventListener('change', function (event) {
+        var input = event.target;
+        if (input instanceof HTMLInputElement && input.name === 'theme' &&
+            (input.value === 'auto' || input.value === 'light' || input.value === 'dark')) {
+          document.documentElement.dataset.theme = input.value;
+          try {
+            localStorage.setItem('kevinbell-theme', input.value);
+          } catch (_) {
+            // The current visit still uses the selected theme.
+          }
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Sync the native selection before waiting for the React bundle.
+      var themeInput = document.getElementById('theme-' + (document.documentElement.dataset.theme || 'auto'));
+      if (themeInput) themeInput.checked = true;
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
