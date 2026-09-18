@@ -116,7 +116,7 @@ a:focus-visible, summary:focus-visible {
 .theme-option { position: relative; cursor: pointer; }
 .theme-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .theme-option span { display: flex; align-items: center; justify-content: center; min-height: 2.25rem; min-width: 2.8rem; border-radius: 0.4rem; color: var(--muted); font-size: 0.8125rem; font-weight: 600; }
-.theme-option input:checked + span { background: var(--card); color: var(--accent); box-shadow: 0 1px 4px rgb(0 0 0 / 0.09); }
+.theme-option input:checked + span { background: var(--card); color: var(--accent); box-shadow: 0 1px 4px rgb(0 0 0 / 0.09); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
 .theme-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
 .mobile-navigation { display: none; }
 
@@ -243,4 +243,11 @@ h2 { margin: 0; font-size: clamp(2rem, 4vw, 2.5rem); line-height: 1.2; font-weig
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* Preserve a visible selection when the OS replaces author colors. */
+@media (forced-colors: active) {
+  .theme-option input:checked + span { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .theme-option input:focus-visible + span { outline: 2px solid Highlight; outline-offset: 2px; }
+  .button { border-color: ButtonText; }
 }
