@@ -12,28 +12,6 @@ const SKILLS = [
   { label: 'Languages Spoken', icon: Globe, items: ['English (Native)', 'Spanish (Professional)', 'German (Elementary)'] },
 ];
 
-function useInView(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    // Without an observer there is nothing to trigger the reveal, so show the
-    // section rather than animating it in — never leave content hidden.
-    if (typeof IntersectionObserver === 'undefined' || !ref.current) {
-      setInView(true);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setInView(true); },
-      { threshold }
-    );
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [threshold]);
-
-  return { ref, inView };
-}
-
 function Section({ id, children, className = '' }: { id: string; children: React.ReactNode; className?: string }) {
   return (
     <section id={id} className={`py-24 px-6 ${className}`}>
@@ -69,8 +47,6 @@ export default function App() {
     if (menuToggle.current) menuToggle.current.checked = false;
   };
 
-  const skillsAnim = useInView();
-  const contactAnim = useInView();
 
   return (
     <div className="font-sans text-slate-800 antialiased">
@@ -251,10 +227,7 @@ export default function App() {
 
       {/* Skills */}
       <Section id="skills" className="bg-slate-50">
-        <div
-          ref={skillsAnim.ref}
-          className={`reveal ${skillsAnim.inView ? 'is-visible' : ''}`}
-        >
+        <div>
           <SectionHeading>Skills</SectionHeading>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {SKILLS.map((skill, i) => {
@@ -290,10 +263,7 @@ export default function App() {
 
       {/* Contact */}
       <Section id="contact" className="bg-slate-900">
-        <div
-          ref={contactAnim.ref}
-          className={`reveal ${contactAnim.inView ? 'is-visible' : ''}`}
-        >
+        <div>
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-white mb-4">Let's Connect</h2>
             <p className="text-slate-400 mb-10 leading-relaxed">
