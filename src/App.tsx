@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Github, Linkedin, Mail, ArrowDown, ArrowUpRight, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
+import { Github, Linkedin, Mail, ArrowDown, ArrowUpRight, Menu, X, GraduationCap, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
 
 const NAV_LINKS = ['About', 'Skills', 'Contact'];
 const GITHUB_URL = 'https://github.com/bell-kevin';
@@ -118,35 +118,22 @@ export default function App() {
           </div>
         </section>
 
-      {/* Education banner */}
-      <div className="bg-emerald-50 border-y border-emerald-100 py-5 px-6">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center gap-6 justify-center md:justify-between text-sm">
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">Software Engineer</span> — U.S. Department of Defense
-            </span>
+        <section className="education" aria-labelledby="education-heading">
+          <div className="container education-content">
+            <div className="education-heading">
+              <GraduationCap size={24} aria-hidden="true" />
+              <div>
+                <h2 id="education-heading">Education</h2>
+                <p>Weber State University</p>
+              </div>
+            </div>
+            <ul className="credentials">
+              <li>M.S. Computer Science</li>
+              <li>B.S. Computer Science</li>
+              <li>Computational Data Science &amp; Machine Learning Certificate</li>
+            </ul>
           </div>
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">M.S. Computer Science</span> — Weber State University
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">Computational Data Science &amp; ML Cert.</span> — Weber State University
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">B.S. Computer Science</span> — Weber State University
-            </span>
-          </div>
-        </div>
-      </div>
+        </section>
 
       {/* Skills */}
       <Section id="skills" className="bg-slate-50">
