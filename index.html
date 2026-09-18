@@ -23,23 +23,6 @@
       name="twitter:description"
       content="Software Engineer at the U.S. Department of Defense. Computer science, data, and free/libre open-source software."
     />
-    <!-- Marks the page as JavaScript-capable. Anything in the stylesheet that
-         depends on JS is scoped to html.js, so browsers with JavaScript
-         disabled fall back to a fully visible, static page. -->
-    <script>
-      (function () {
-        var el = document.documentElement;
-        el.classList.add('js');
-        // The module bundle is deferred, so it runs before DOMContentLoaded.
-        // If it still hasn't reported in by then it never ran at all — blocked
-        // by an extension, 404'd after a deploy, or failed to parse. Drop back
-        // to the no-JS layout instead of leaving the scroll-reveal sections
-        // hidden forever behind a reveal that is never coming.
-        document.addEventListener('DOMContentLoaded', function () {
-          if (!el.classList.contains('js-ready')) el.classList.remove('js');
-        });
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
