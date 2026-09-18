@@ -78,7 +78,7 @@ export default function App() {
                 <p className="eyebrow">Software Engineer <span aria-hidden="true">/</span> Utah</p>
                 <h1 id="about-heading">Kevin Bell</h1>
                 <p className="intro">
-                  Software Engineer at the U.S. Department of Defense. M.S. Computer Science graduate with a Computational Data Science &amp; Machine Learning certification.
+                  Software Engineer at the United States Department of Defense. M.S. Computer Science graduate with a Computational Data Science &amp; Machine Learning certification.
                 </p>
                 <p className="hero-description">
                   I care about free/libre open-source software, AI, and building useful things.
@@ -95,7 +95,7 @@ export default function App() {
                   <a href="#contact" className="button button-primary"><Mail size={18} aria-hidden="true" /> Get in touch</a>
                 </div>
                 <ul className="tags" aria-label="Highlights">
-                  {['U.S. Dept. of Defense', 'FLOSS Advocate', 'Hackathon Winner'].map((tag) => <li key={tag}>{tag}</li>)}
+                  {['United States Dept. of Defense', 'FLOSS Advocate', 'Hackathon Winner'].map((tag) => <li key={tag}>{tag}</li>)}
                 </ul>
               </div>
             </div>
