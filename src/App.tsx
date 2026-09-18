@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Github, Linkedin, Mail, ChevronDown, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
 
 const NAV_LINKS = ['About', 'Skills', 'Contact'];
@@ -30,92 +30,48 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [scrolled, setScrolled] = useState(false);
-  const menuToggle = useRef<HTMLInputElement>(null);
+  const mobileMenu = useRef<HTMLDetailsElement>(null);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // Navigation itself is plain anchor links, so it works with scripting off.
-  // This only collapses the mobile menu after a tap; without JS the menu stays
-  // open behind the jump, which is harmless.
   const closeMenu = () => {
-    if (menuToggle.current) menuToggle.current.checked = false;
+    if (mobileMenu.current) mobileMenu.current.open = false;
   };
 
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 48rem)');
+    const onResize = () => {
+      if (desktop.matches && mobileMenu.current) mobileMenu.current.open = false;
+    };
+    desktop.addEventListener('change', onResize);
+    return () => desktop.removeEventListener('change', onResize);
+  }, []);
 
   return (
     <>
       <a className="skip-link" href="#main-content">Skip to content</a>
-      {/* Nav */}
-      <header
-        className={`site-header top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white/95 backdrop-blur shadow-sm border-b border-slate-100' : 'bg-transparent'
-        }`}
-      >
-        {/* The mobile menu is opened by this checkbox rather than by state, so
-            it still works when JavaScript is unavailable. Styling lives in
-            index.css alongside the other progressive-enhancement rules. */}
-        <input
-          type="checkbox"
-          id="menu-toggle"
-          ref={menuToggle}
-          className="sr-only"
-          aria-label="Toggle navigation menu"
-          aria-controls="mobile-menu"
-        />
-
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <a
-            href="#about"
-            className={`text-lg font-bold tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}
-          >
-            Kevin Bell
-          </a>
-
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase()}`}
-                className={`text-sm font-medium transition-colors hover:text-emerald-500 ${
-                  scrolled ? 'text-slate-600' : 'text-white/80'
-                }`}
-              >
-                {link}
-              </a>
-            ))}
+      <header className="site-header">
+        <div className="container header-content">
+          <a href="#about" className="site-name" onClick={closeMenu}>Kevin Bell<span aria-hidden="true">.</span></a>
+          <nav className="desktop-nav" aria-label="Main navigation">
+            {NAV_LINKS.map((link) => <a key={link} href={`#${link.toLowerCase()}`}>{link}</a>)}
           </nav>
-
-          {/* Mobile hamburger */}
-          <label
-            htmlFor="menu-toggle"
-            className={`menu-button md:hidden cursor-pointer transition-colors ${scrolled ? 'text-slate-700' : 'text-white'}`}
+          <details
+            ref={mobileMenu}
+            className="mobile-navigation"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && mobileMenu.current?.open) {
+                closeMenu();
+                mobileMenu.current.querySelector('summary')?.focus();
+              }
+            }}
           >
-            <Menu size={22} className="menu-icon-open" aria-hidden="true" />
-            <X size={22} className="menu-icon-close" aria-hidden="true" />
-          </label>
-        </div>
-
-        {/* Mobile menu */}
-        <div id="mobile-menu" className="mobile-menu md:hidden bg-white border-b border-slate-100">
-          <nav className="flex flex-col px-6 py-4 gap-4">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase()}`}
-                onClick={closeMenu}
-                className="text-left text-slate-700 text-sm font-medium hover:text-emerald-500 transition-colors"
-              >
-                {link}
-              </a>
-            ))}
-          </nav>
+            <summary aria-label="Navigation menu">
+              <Menu size={22} className="menu-icon-open" aria-hidden="true" />
+              <X size={22} className="menu-icon-close" aria-hidden="true" />
+            </summary>
+            <nav className="mobile-menu" aria-label="Mobile navigation">
+              {NAV_LINKS.map((link) => <a key={link} href={`#${link.toLowerCase()}`} onClick={closeMenu}>{link}</a>)}
+            </nav>
+          </details>
         </div>
       </header>
 
