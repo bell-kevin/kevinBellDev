@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Github, Linkedin, Mail, ChevronDown, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
+import { Github, Linkedin, Mail, ArrowDown, ArrowUpRight, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
 
 const NAV_LINKS = ['About', 'Skills', 'Contact'];
+const GITHUB_URL = 'https://github.com/bell-kevin';
+const LINKEDIN_URL = 'https://www.linkedin.com/in/kev-bell/';
 
 const SKILLS = [
   { label: 'Languages', icon: Code2, items: ['Go', 'TypeScript', 'Python', 'C', 'JavaScript'] },
@@ -76,82 +78,45 @@ export default function App() {
       </header>
 
       <main id="main-content" tabIndex={-1}>
-      {/* Hero */}
-      <div id="about" className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-slate-900">
-        {/* Background grid */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
-            backgroundSize: '48px 48px',
-          }}
-        />
-        {/* Gradient orb */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
-
-        <div className="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-16">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
-            <img
-              src={`https://avatars.githubusercontent.com/u/8269880?v=4`}
-              alt="Kevin Bell"
-              className="w-32 h-32 rounded-2xl ring-4 ring-emerald-500/40 shadow-2xl object-cover shrink-0"
-            />
-            <div className="text-center md:text-left">
-              <p className="text-emerald-400 font-mono text-sm tracking-widest uppercase mb-3">Software Engineer</p>
-              <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight mb-4">
-                Kevin Bell
-              </h1>
-              <p className="text-slate-400 text-lg max-w-xl leading-relaxed mb-8">
-                Software Engineer at the U.S. Department of Defense. M.S. Computer Science graduate with a Computational Data Science &amp; Machine Learning certification. Passionate about free/libre open-source software, AI, and building things that matter — fast.
-              </p>
-
-              <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
-                <a
-                  href="https://github.com/bell-kevin"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 border border-white/10"
-                >
-                  <Github size={16} /> GitHub
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/kev-bell/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0A66C2]/20 hover:bg-[#0A66C2]/30 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 border border-[#0A66C2]/30"
-                >
-                  <Linkedin size={16} /> LinkedIn
-                </a>
-                <a
-                  href="#contact"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-emerald-500/25"
-                >
-                  <Mail size={16} /> Get in Touch
-                </a>
-              </div>
-
-              <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                {['U.S. Dept. of Defense', 'FLOSS Advocate', 'Hackathon Winner', 'Utah'].map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-white/5 border border-white/10 text-slate-400 text-xs rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
+        <section id="about" className="hero" aria-labelledby="about-heading">
+          <div className="container hero-content">
+            <div className="hero-profile">
+              <img
+                src="https://avatars.githubusercontent.com/u/8269880?v=4"
+                alt="Kevin Bell"
+                width="160"
+                height="160"
+                className="portrait"
+                fetchPriority="high"
+              />
+              <div className="hero-copy">
+                <p className="eyebrow">Software Engineer <span aria-hidden="true">/</span> Utah</p>
+                <h1 id="about-heading">Kevin Bell</h1>
+                <p className="intro">
+                  Software Engineer at the U.S. Department of Defense. M.S. Computer Science graduate with a Computational Data Science &amp; Machine Learning certification.
+                </p>
+                <p className="hero-description">
+                  I care about free/libre open-source software, AI, and building useful things.
+                </p>
+                <div className="social-links">
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="button button-secondary">
+                    <Github size={18} aria-hidden="true" /> GitHub <ArrowUpRight size={15} aria-hidden="true" />
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                  <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="button button-secondary">
+                    <Linkedin size={18} aria-hidden="true" /> LinkedIn <ArrowUpRight size={15} aria-hidden="true" />
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                  <a href="#contact" className="button button-primary"><Mail size={18} aria-hidden="true" /> Get in touch</a>
+                </div>
+                <ul className="tags" aria-label="Highlights">
+                  {['U.S. Dept. of Defense', 'FLOSS Advocate', 'Hackathon Winner'].map((tag) => <li key={tag}>{tag}</li>)}
+                </ul>
               </div>
             </div>
+            <a href="#skills" className="explore-link">Explore my skills <ArrowDown size={17} aria-hidden="true" /></a>
           </div>
-        </div>
-
-        <a
-          href="#skills"
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500 hover:text-emerald-400 transition-colors animate-bounce"
-          aria-label="Skip to skills"
-        >
-          <ChevronDown size={28} />
-        </a>
-      </div>
+        </section>
 
       {/* Education banner */}
       <div className="bg-emerald-50 border-y border-emerald-100 py-5 px-6">
