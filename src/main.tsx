@@ -10,15 +10,10 @@ const app = (
   </StrictMode>
 );
 
-// Production builds ship prerendered markup (see scripts/prerender.mjs), so
+// Production builds ship prerendered markup (see vite.config.ts), so
 // hydrate it instead of throwing it away. `vite dev` serves an empty root.
 if (container.hasChildNodes()) {
   hydrateRoot(container, app);
 } else {
   createRoot(container).render(app);
 }
-
-// Tells the bootstrap script in index.html that the bundle really did run, so
-// it leaves html.js in place. Re-adding `js` covers the case where the check
-// already fired and stripped it.
-document.documentElement.classList.add('js', 'js-ready');

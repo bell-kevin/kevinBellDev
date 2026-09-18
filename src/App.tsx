@@ -1,58 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { Github, Linkedin, Mail, ExternalLink, ChevronDown, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Github, Linkedin, Mail, ArrowDown, ArrowUpRight, Menu, X, GraduationCap, Code2, Cloud, Database, Cpu, Globe, Languages } from 'lucide-react';
+import ThemeControl from './ThemeControl';
 
-const NAV_LINKS = ['About', 'Projects', 'Skills', 'Volunteering', 'Contact'];
-
-const PROJECTS = [
-  {
-    title: 'Venturai',
-    description: 'AI-powered asset tracking and predictive maintenance software using near field communication (NFC) technology. Built in 19 hours for HackUSU 2026.',
-    badge: '2nd Place — Tech Start-Up',
-    lang: 'TypeScript',
-    langColor: 'bg-blue-400',
-    url: 'https://github.com/bell-kevin/venturai',
-  },
-  {
-    title: 'Vocode Hackathon',
-    description: "It's not vibecoding — it's vocoding. Weber State University A.I. Hackathon Spring 2026. Voice-driven AI collaboration project.",
-    badge: 'WSU AI Hackathon 2026',
-    lang: 'Go',
-    langColor: 'bg-cyan-400',
-    url: 'https://github.com/bell-kevin/vocode',
-  },
-  {
-    title: 'CS6580 Capstone Project',
-    description: 'Data Science Algorithms 2 capstone — deep dive into advanced ML algorithms, statistical modeling, and data visualization pipelines.',
-    badge: 'Spring 2026',
-    lang: 'TypeScript',
-    langColor: 'bg-blue-400',
-    url: 'https://github.com/bell-kevin/cs6580capstoneProject',
-  },
-  {
-    title: 'YouTube Pipeline AWS',
-    description: 'End-to-end YouTube analytics pipeline leveraging Amazon Web Services for data ingestion, processing, and visualization.',
-    badge: 'CS 6705 Final Project',
-    lang: 'Jupyter Notebook',
-    langColor: 'bg-orange-400',
-    url: 'https://github.com/bell-kevin/YouTubePipelineAWS',
-  },
-  {
-    title: 'UTA Data Pipeline',
-    description: 'Utah Transit Authority data engineering pipeline built on AWS — ingesting, transforming, and querying large transit datasets.',
-    badge: 'CS 6830 Final Project',
-    lang: 'Python',
-    langColor: 'bg-yellow-400',
-    url: 'https://github.com/bell-kevin/UTAtransitAuthorityDataEngineering',
-  },
-  {
-    title: 'BDD-Based CTL Model Checker',
-    description: 'Formal system design project implementing a binary decision diagram-based computation tree logic model checker from scratch in C.',
-    badge: 'CS 6840 Final Project',
-    lang: 'C',
-    langColor: 'bg-gray-400',
-    url: 'https://github.com/bell-kevin',
-  },
-];
+const NAV_LINKS = ['About', 'Skills', 'Contact'];
+const GITHUB_URL = 'https://github.com/bell-kevin';
+const LINKEDIN_URL = 'https://www.linkedin.com/in/kev-bell/';
 
 const SKILLS = [
   { label: 'Languages', icon: Code2, items: ['Go', 'TypeScript', 'Python', 'C', 'JavaScript'] },
@@ -60,434 +12,173 @@ const SKILLS = [
   { label: 'Computer Science', icon: Cpu, items: ['Formal System Design', 'Model Checking', 'Data Science Algorithms', 'ML/AI'] },
   { label: 'Databases', icon: Database, items: ['Data Pipelines', 'Analytics', 'Big Data', 'SQL'] },
   { label: 'Open Source', icon: Globe, items: ['FLOSS Advocacy', 'Git', 'GitHub', 'Open Collaboration'] },
-  { label: 'Languages Spoken', icon: Globe, items: ['English (Native)', 'Spanish (Professional)', 'German (Elementary)'] },
+  { label: 'Languages Spoken', icon: Languages, items: ['English (Native)', 'Spanish (Professional)', 'German (Elementary)'] },
 ];
-
-const VOLUNTEERING = [
-  {
-    org: 'Free Software Foundation',
-    roles: [
-      'LibrePlanet Utah Mail-List Administrator',
-      'LibrePlanet 2024 Online Chat Monitor',
-      'LibrePlanet 2023 Online Chat Monitor',
-    ],
-  },
-  {
-    org: 'The Church of Jesus Christ of Latter-day Saints',
-    roles: [
-      'Ward Mission Leader',
-      'Ward Executive Secretary',
-      'Elders Quorum First Counselor',
-      'Ward Temple & Family History Leader',
-      'Full-Time Missionary — Southern Georgia (Spanish-speaking)',
-    ],
-  },
-];
-
-function useInView(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    // Without an observer there is nothing to trigger the reveal, so show the
-    // section rather than animating it in — never leave content hidden.
-    if (typeof IntersectionObserver === 'undefined' || !ref.current) {
-      setInView(true);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setInView(true); },
-      { threshold }
-    );
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [threshold]);
-
-  return { ref, inView };
-}
-
-function Section({ id, children, className = '' }: { id: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section id={id} className={`py-24 px-6 ${className}`}>
-      <div className="max-w-5xl mx-auto">{children}</div>
-    </section>
-  );
-}
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-3xl font-bold text-slate-900 mb-12 flex items-center gap-3">
-      <span className="w-8 h-0.5 bg-emerald-500 inline-block" />
-      {children}
-    </h2>
-  );
-}
 
 export default function App() {
-  const [scrolled, setScrolled] = useState(false);
-  const menuToggle = useRef<HTMLInputElement>(null);
+  const mobileMenu = useRef<HTMLDetailsElement>(null);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // Navigation itself is plain anchor links, so it works with scripting off.
-  // This only collapses the mobile menu after a tap; without JS the menu stays
-  // open behind the jump, which is harmless.
   const closeMenu = () => {
-    if (menuToggle.current) menuToggle.current.checked = false;
+    if (mobileMenu.current) mobileMenu.current.open = false;
   };
 
-  const projectsAnim = useInView();
-  const skillsAnim = useInView();
-  const volunteeringAnim = useInView();
-  const contactAnim = useInView();
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 48rem)');
+    const onResize = () => {
+      if (desktop.matches && mobileMenu.current) mobileMenu.current.open = false;
+    };
+    desktop.addEventListener('change', onResize);
+    return () => desktop.removeEventListener('change', onResize);
+  }, []);
 
   return (
-    <div className="font-sans text-slate-800 antialiased">
-      {/* Nav */}
-      <header
-        className={`site-header top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white/95 backdrop-blur shadow-sm border-b border-slate-100' : 'bg-transparent'
-        }`}
-      >
-        {/* The mobile menu is opened by this checkbox rather than by state, so
-            it still works when JavaScript is unavailable. Styling lives in
-            index.css alongside the other progressive-enhancement rules. */}
-        <input
-          type="checkbox"
-          id="menu-toggle"
-          ref={menuToggle}
-          className="sr-only"
-          aria-label="Toggle navigation menu"
-          aria-controls="mobile-menu"
-        />
-
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <a
-            href="#about"
-            className={`text-lg font-bold tracking-tight transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}
-          >
-            Kevin Bell
-          </a>
-
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase()}`}
-                className={`text-sm font-medium transition-colors hover:text-emerald-500 ${
-                  scrolled ? 'text-slate-600' : 'text-white/80'
-                }`}
-              >
-                {link}
-              </a>
-            ))}
+    <>
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <header className="site-header">
+        <div className="container header-content">
+          <a href="#about" className="site-name" onClick={closeMenu}>Kevin Bell<span aria-hidden="true">.</span></a>
+          <nav className="desktop-nav" aria-label="Main navigation">
+            {NAV_LINKS.map((link) => <a key={link} href={`#${link.toLowerCase()}`}>{link}</a>)}
           </nav>
-
-          {/* Mobile hamburger */}
-          <label
-            htmlFor="menu-toggle"
-            className={`menu-button md:hidden cursor-pointer transition-colors ${scrolled ? 'text-slate-700' : 'text-white'}`}
+          <ThemeControl />
+          <details
+            ref={mobileMenu}
+            className="mobile-navigation"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && mobileMenu.current?.open) {
+                closeMenu();
+                mobileMenu.current.querySelector('summary')?.focus();
+              }
+            }}
           >
-            <Menu size={22} className="menu-icon-open" aria-hidden="true" />
-            <X size={22} className="menu-icon-close" aria-hidden="true" />
-          </label>
-        </div>
-
-        {/* Mobile menu */}
-        <div id="mobile-menu" className="mobile-menu md:hidden bg-white border-b border-slate-100">
-          <nav className="flex flex-col px-6 py-4 gap-4">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase()}`}
-                onClick={closeMenu}
-                className="text-left text-slate-700 text-sm font-medium hover:text-emerald-500 transition-colors"
-              >
-                {link}
-              </a>
-            ))}
-          </nav>
+            <summary aria-label="Navigation menu">
+              <Menu size={22} className="menu-icon-open" aria-hidden="true" />
+              <X size={22} className="menu-icon-close" aria-hidden="true" />
+            </summary>
+            <nav className="mobile-menu" aria-label="Mobile navigation">
+              {NAV_LINKS.map((link) => <a key={link} href={`#${link.toLowerCase()}`} onClick={closeMenu}>{link}</a>)}
+            </nav>
+          </details>
         </div>
       </header>
 
-      {/* Hero */}
-      <div id="about" className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-slate-900">
-        {/* Background grid */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
-            backgroundSize: '48px 48px',
-          }}
-        />
-        {/* Gradient orb */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
-
-        <div className="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-16">
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
-            <img
-              src={`https://avatars.githubusercontent.com/u/8269880?v=4`}
-              alt="Kevin Bell"
-              className="w-32 h-32 rounded-2xl ring-4 ring-emerald-500/40 shadow-2xl object-cover shrink-0"
-            />
-            <div className="text-center md:text-left">
-              <p className="text-emerald-400 font-mono text-sm tracking-widest uppercase mb-3">Software Engineer</p>
-              <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight mb-4">
-                Kevin Bell
-              </h1>
-              <p className="text-slate-400 text-lg max-w-xl leading-relaxed mb-8">
-                Software Engineer at the U.S. Department of War. M.S. Computer Science graduate with a Computational Data Science &amp; Machine Learning certification. Passionate about free/libre open-source software, AI, and building things that matter — fast.
-              </p>
-
-              <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
-                <a
-                  href="https://github.com/bell-kevin"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 border border-white/10"
-                >
-                  <Github size={16} /> GitHub
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/kev-bell/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0A66C2]/20 hover:bg-[#0A66C2]/30 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 border border-[#0A66C2]/30"
-                >
-                  <Linkedin size={16} /> LinkedIn
-                </a>
-                <a
-                  href="#contact"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-emerald-500/25"
-                >
-                  <Mail size={16} /> Get in Touch
-                </a>
-              </div>
-
-              <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                {['U.S. Dept. of War', 'FLOSS Advocate', 'Hackathon Winner', 'Utah'].map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-white/5 border border-white/10 text-slate-400 text-xs rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <a
-          href="#projects"
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500 hover:text-emerald-400 transition-colors animate-bounce"
-          aria-label="Skip to projects"
-        >
-          <ChevronDown size={28} />
-        </a>
-      </div>
-
-      {/* Education banner */}
-      <div className="bg-emerald-50 border-y border-emerald-100 py-5 px-6">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center gap-6 justify-center md:justify-between text-sm">
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">Software Engineer</span> — U.S. Department of War
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">M.S. Computer Science</span> — Weber State University
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">Computational Data Science &amp; ML Cert.</span> — Weber State University
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award size={16} className="text-emerald-600 shrink-0" />
-            <span className="text-slate-700">
-              <span className="font-semibold">B.S. Computer Science</span> — Weber State University
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Projects */}
-      <Section id="projects" className="bg-white">
-        <div
-          ref={projectsAnim.ref}
-          className={`reveal ${projectsAnim.inView ? 'is-visible' : ''}`}
-        >
-          <SectionHeading>Projects</SectionHeading>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PROJECTS.map((project, i) => (
-              <a
-                key={project.title}
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative flex flex-col bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1"
-                style={{ transitionDelay: `${i * 60}ms` }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                    {project.badge}
-                  </span>
-                  <ExternalLink size={14} className="text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0 mt-0.5" />
+      <main id="main-content" tabIndex={-1}>
+        <section id="about" className="hero" aria-labelledby="about-heading">
+          <div className="container hero-content">
+            <div className="hero-profile">
+              <img
+                src="https://avatars.githubusercontent.com/u/8269880?v=4"
+                alt="Kevin Bell"
+                width="160"
+                height="160"
+                className="portrait"
+                fetchPriority="high"
+              />
+              <div className="hero-copy">
+                <p className="eyebrow">Software Engineer <span aria-hidden="true">/</span> Utah</p>
+                <h1 id="about-heading">Kevin Bell</h1>
+                <p className="intro">
+                  Software Engineer at the U.S. Department of Defense. M.S. Computer Science graduate with a Computational Data Science &amp; Machine Learning certification.
+                </p>
+                <p className="hero-description">
+                  I care about free/libre open-source software, AI, and building useful things.
+                </p>
+                <div className="social-links">
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="button button-secondary">
+                    <Github size={18} aria-hidden="true" /> GitHub <ArrowUpRight size={15} aria-hidden="true" />
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                  <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="button button-secondary">
+                    <Linkedin size={18} aria-hidden="true" /> LinkedIn <ArrowUpRight size={15} aria-hidden="true" />
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                  <a href="#contact" className="button button-primary"><Mail size={18} aria-hidden="true" /> Get in touch</a>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                  {project.title}
-                </h3>
-                <p className="text-slate-500 text-sm leading-relaxed flex-1">{project.description}</p>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${project.langColor}`} />
-                  <span className="text-slate-400 text-xs">{project.lang}</span>
-                </div>
-              </a>
-            ))}
-          </div>
-          <div className="mt-8 text-center">
-            <a
-              href="https://github.com/bell-kevin"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-600 transition-colors font-medium"
-            >
-              <Github size={16} /> View all repositories on GitHub
-            </a>
-          </div>
-        </div>
-      </Section>
-
-      {/* Skills */}
-      <Section id="skills" className="bg-slate-50">
-        <div
-          ref={skillsAnim.ref}
-          className={`reveal ${skillsAnim.inView ? 'is-visible' : ''}`}
-        >
-          <SectionHeading>Skills</SectionHeading>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SKILLS.map((skill, i) => {
-              const Icon = skill.icon;
-              return (
-                <div
-                  key={skill.label}
-                  className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-emerald-300 hover:shadow-md transition-all duration-300"
-                  style={{ transitionDelay: `${i * 50}ms` }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-                      <Icon size={18} className="text-emerald-600" />
-                    </div>
-                    <h3 className="font-semibold text-slate-900">{skill.label}</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {skill.items.map((item) => (
-                      <span
-                        key={item}
-                        className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs rounded-lg"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </Section>
-
-      {/* Volunteering */}
-      <Section id="volunteering" className="bg-white">
-        <div
-          ref={volunteeringAnim.ref}
-          className={`reveal ${volunteeringAnim.inView ? 'is-visible' : ''}`}
-        >
-          <SectionHeading>Volunteering</SectionHeading>
-          <div className="grid md:grid-cols-2 gap-8">
-            {VOLUNTEERING.map((v) => (
-              <div
-                key={v.org}
-                className="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:border-emerald-300 hover:shadow-md transition-all duration-300"
-              >
-                <h3 className="font-bold text-slate-900 text-lg mb-4">{v.org}</h3>
-                <ul className="space-y-2">
-                  {v.roles.map((role) => (
-                    <li key={role} className="flex items-start gap-2 text-slate-600 text-sm">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      {role}
-                    </li>
-                  ))}
+                <ul className="tags" aria-label="Highlights">
+                  {['U.S. Dept. of Defense', 'FLOSS Advocate', 'Hackathon Winner'].map((tag) => <li key={tag}>{tag}</li>)}
                 </ul>
               </div>
-            ))}
+            </div>
+            <a href="#skills" className="explore-link">Explore my skills <ArrowDown size={17} aria-hidden="true" /></a>
           </div>
-        </div>
-      </Section>
+        </section>
 
-      {/* Contact */}
-      <Section id="contact" className="bg-slate-900">
-        <div
-          ref={contactAnim.ref}
-          className={`reveal ${contactAnim.inView ? 'is-visible' : ''}`}
-        >
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-4">Let's Connect</h2>
-            <p className="text-slate-400 mb-10 leading-relaxed">
-              I'm always open to interesting conversations, collaborations, and opportunities. Feel free to reach out through any of the channels below.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a
-                href="https://github.com/bell-kevin"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-all hover:scale-105 border border-white/10"
-              >
-                <Github size={18} />
-                <span>GitHub</span>
+        <section className="education" aria-labelledby="education-heading">
+          <div className="container education-content">
+            <div className="education-heading">
+              <GraduationCap size={24} aria-hidden="true" />
+              <div>
+                <h2 id="education-heading">Education</h2>
+                <p>Weber State University</p>
+              </div>
+            </div>
+            <ul className="credentials">
+              <li>M.S. Computer Science</li>
+              <li>B.S. Computer Science</li>
+              <li>Computational Data Science &amp; Machine Learning Certificate</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="skills" className="section skills-section" aria-labelledby="skills-heading">
+          <div className="container">
+            <div className="section-heading">
+              <p className="eyebrow">What I work with</p>
+              <h2 id="skills-heading">Skills</h2>
+            </div>
+            <div className="skills-grid">
+              {SKILLS.map((skill) => {
+                const Icon = skill.icon;
+                return (
+                  <div key={skill.label} className="skill-card">
+                    <div className="skill-heading">
+                      <span className="skill-icon"><Icon size={20} aria-hidden="true" /></span>
+                      <h3>{skill.label}</h3>
+                    </div>
+                    <ul className="skill-tags">
+                      {skill.items.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="section contact-section" aria-labelledby="contact-heading">
+          <div className="container contact-content">
+            <p className="eyebrow">Get in touch</p>
+            <h2 id="contact-heading">Let's connect.</h2>
+            <p className="contact-description">Have an idea, a question, or something interesting to share? I'd like to hear from you.</p>
+            <div className="contact-links">
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="contact-link">
+                <Github size={22} aria-hidden="true" />
+                <span><strong>GitHub</strong><span>Code and projects</span></span>
+                <ArrowUpRight size={18} aria-hidden="true" />
+                <span className="sr-only"> (opens in a new tab)</span>
               </a>
-              <a
-                href="https://www.linkedin.com/in/kev-bell/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-3.5 bg-[#0A66C2]/20 hover:bg-[#0A66C2]/30 text-white rounded-xl text-sm font-medium transition-all hover:scale-105 border border-[#0A66C2]/30"
-              >
-                <Linkedin size={18} />
-                <span>LinkedIn</span>
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="contact-link">
+                <Linkedin size={22} aria-hidden="true" />
+                <span><strong>LinkedIn</strong><span>Experience and volunteering</span></span>
+                <ArrowUpRight size={18} aria-hidden="true" />
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+              <a href="mailto:kevinBell@Linux.com" className="contact-link email-link">
+                <Mail size={22} aria-hidden="true" />
+                <span><strong>kevinBell@Linux.com</strong><span>Send me an email</span></span>
+                <ArrowUpRight size={18} aria-hidden="true" />
               </a>
             </div>
           </div>
-        </div>
-      </Section>
+        </section>
+      </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-950 text-slate-500 text-sm text-center py-6 px-6">
-        {/* Prerendered at build time; the client may render a newer year, which
-            is a harmless difference rather than a hydration error. */}
-        <p suppressHydrationWarning>
-          Built with care &mdash; Kevin Bell &copy; {new Date().getFullYear()} &mdash;{' '}
-          <a
-            href="https://github.com/bell-kevin"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-emerald-400 transition-colors"
-          >
-            Open Source
-          </a>
-        </p>
+      <footer className="site-footer">
+        <div className="container footer-content">
+          <p suppressHydrationWarning>&copy; {new Date().getFullYear()} Kevin Bell</p>
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">Find me on GitHub <ArrowUpRight size={14} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span></a>
+        </div>
       </footer>
-    </div>
+    </>
   );
 }
