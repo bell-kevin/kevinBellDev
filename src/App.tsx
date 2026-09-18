@@ -1,58 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Github, Linkedin, Mail, ExternalLink, ChevronDown, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
+import { Github, Linkedin, Mail, ChevronDown, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
 
-const NAV_LINKS = ['About', 'Projects', 'Skills', 'Volunteering', 'Contact'];
-
-const PROJECTS = [
-  {
-    title: 'Venturai',
-    description: 'AI-powered asset tracking and predictive maintenance software using near field communication (NFC) technology. Built in 19 hours for HackUSU 2026.',
-    badge: '2nd Place — Tech Start-Up',
-    lang: 'TypeScript',
-    langColor: 'bg-blue-400',
-    url: 'https://github.com/bell-kevin/venturai',
-  },
-  {
-    title: 'Vocode Hackathon',
-    description: "It's not vibecoding — it's vocoding. Weber State University A.I. Hackathon Spring 2026. Voice-driven AI collaboration project.",
-    badge: 'WSU AI Hackathon 2026',
-    lang: 'Go',
-    langColor: 'bg-cyan-400',
-    url: 'https://github.com/bell-kevin/vocode',
-  },
-  {
-    title: 'CS6580 Capstone Project',
-    description: 'Data Science Algorithms 2 capstone — deep dive into advanced ML algorithms, statistical modeling, and data visualization pipelines.',
-    badge: 'Spring 2026',
-    lang: 'TypeScript',
-    langColor: 'bg-blue-400',
-    url: 'https://github.com/bell-kevin/cs6580capstoneProject',
-  },
-  {
-    title: 'YouTube Pipeline AWS',
-    description: 'End-to-end YouTube analytics pipeline leveraging Amazon Web Services for data ingestion, processing, and visualization.',
-    badge: 'CS 6705 Final Project',
-    lang: 'Jupyter Notebook',
-    langColor: 'bg-orange-400',
-    url: 'https://github.com/bell-kevin/YouTubePipelineAWS',
-  },
-  {
-    title: 'UTA Data Pipeline',
-    description: 'Utah Transit Authority data engineering pipeline built on AWS — ingesting, transforming, and querying large transit datasets.',
-    badge: 'CS 6830 Final Project',
-    lang: 'Python',
-    langColor: 'bg-yellow-400',
-    url: 'https://github.com/bell-kevin/UTAtransitAuthorityDataEngineering',
-  },
-  {
-    title: 'BDD-Based CTL Model Checker',
-    description: 'Formal system design project implementing a binary decision diagram-based computation tree logic model checker from scratch in C.',
-    badge: 'CS 6840 Final Project',
-    lang: 'C',
-    langColor: 'bg-gray-400',
-    url: 'https://github.com/bell-kevin',
-  },
-];
+const NAV_LINKS = ['About', 'Skills', 'Volunteering', 'Contact'];
 
 const SKILLS = [
   { label: 'Languages', icon: Code2, items: ['Go', 'TypeScript', 'Python', 'C', 'JavaScript'] },
@@ -141,7 +90,6 @@ export default function App() {
     if (menuToggle.current) menuToggle.current.checked = false;
   };
 
-  const projectsAnim = useInView();
   const skillsAnim = useInView();
   const volunteeringAnim = useInView();
   const contactAnim = useInView();
@@ -285,9 +233,9 @@ export default function App() {
         </div>
 
         <a
-          href="#projects"
+          href="#skills"
           className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500 hover:text-emerald-400 transition-colors animate-bounce"
-          aria-label="Skip to projects"
+          aria-label="Skip to skills"
         >
           <ChevronDown size={28} />
         </a>
@@ -322,53 +270,6 @@ export default function App() {
           </div>
         </div>
       </div>
-
-      {/* Projects */}
-      <Section id="projects" className="bg-white">
-        <div
-          ref={projectsAnim.ref}
-          className={`reveal ${projectsAnim.inView ? 'is-visible' : ''}`}
-        >
-          <SectionHeading>Projects</SectionHeading>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PROJECTS.map((project, i) => (
-              <a
-                key={project.title}
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative flex flex-col bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1"
-                style={{ transitionDelay: `${i * 60}ms` }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="inline-block px-2.5 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                    {project.badge}
-                  </span>
-                  <ExternalLink size={14} className="text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0 mt-0.5" />
-                </div>
-                <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                  {project.title}
-                </h3>
-                <p className="text-slate-500 text-sm leading-relaxed flex-1">{project.description}</p>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${project.langColor}`} />
-                  <span className="text-slate-400 text-xs">{project.lang}</span>
-                </div>
-              </a>
-            ))}
-          </div>
-          <div className="mt-8 text-center">
-            <a
-              href="https://github.com/bell-kevin"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-emerald-600 transition-colors font-medium"
-            >
-              <Github size={16} /> View all repositories on GitHub
-            </a>
-          </div>
-        </div>
-      </Section>
 
       {/* Skills */}
       <Section id="skills" className="bg-slate-50">
