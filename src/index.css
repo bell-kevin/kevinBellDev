@@ -9,15 +9,15 @@
   --hero: #f3f8f6;
   --card: #ffffff;
   --text: #182c27;
-  --muted: #52665f;
-  --accent: #087a56;
+  --muted: #3f5149;
+  --accent: #055438;
   --accent-soft: #e4f3eb;
   --border: #d9e4de;
-  --primary: #087a56;
-  --primary-hover: #066043;
+  --primary: #055438;
+  --primary-hover: #04412c;
   --primary-text: #ffffff;
-  --grid: rgb(8 122 86 / 0.045);
-  --glow: rgb(80 200 146 / 0.1);
+  --grid: rgb(8 122 86 / 0.025);
+  --glow: rgb(80 200 146 / 0.05);
 }
 
 :root[data-theme='dark']:not(:has(#theme-light:checked)),
@@ -28,15 +28,15 @@
   --hero: #101f1a;
   --card: #192b24;
   --text: #eef6f1;
-  --muted: #b0c2b8;
-  --accent: #78d9ac;
+  --muted: #c6d4cc;
+  --accent: #8ae1b9;
   --accent-soft: #223e30;
   --border: #30493c;
-  --primary: #78d9ac;
+  --primary: #8ae1b9;
   --primary-hover: #9ae7c4;
   --primary-text: #112b1e;
-  --grid: rgb(120 217 172 / 0.04);
-  --glow: rgb(80 200 146 / 0.07);
+  --grid: rgb(120 217 172 / 0.025);
+  --glow: rgb(80 200 146 / 0.05);
 }
 
 /* CSS keeps Auto in sync with the OS, including when scripts are disabled. */
@@ -48,15 +48,15 @@
     --hero: #101f1a;
     --card: #192b24;
     --text: #eef6f1;
-    --muted: #b0c2b8;
-    --accent: #78d9ac;
+    --muted: #c6d4cc;
+    --accent: #8ae1b9;
     --accent-soft: #223e30;
     --border: #30493c;
-    --primary: #78d9ac;
+    --primary: #8ae1b9;
     --primary-hover: #9ae7c4;
     --primary-text: #112b1e;
-    --grid: rgb(120 217 172 / 0.04);
-    --glow: rgb(80 200 146 / 0.07);
+    --grid: rgb(120 217 172 / 0.025);
+    --glow: rgb(80 200 146 / 0.05);
   }
 }
 
@@ -134,7 +134,7 @@ a:focus-visible, summary:focus-visible {
 .portrait { width: 10rem; height: 10rem; border-radius: 1.75rem; border: 1px solid var(--border); outline: 6px solid var(--accent-soft); object-fit: cover; margin-top: 0.5rem; flex-shrink: 0; }
 .hero-copy { max-width: 43rem; }
 .eyebrow { color: var(--accent); text-transform: uppercase; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.16em; margin: 0 0 1rem; }
-.eyebrow > span { opacity: 0.6; padding-inline: 0.45rem; }
+.eyebrow > span { padding-inline: 0.45rem; }
 h1 { font-size: clamp(3rem, 6vw, 5rem); line-height: 1.05; letter-spacing: -0.055em; font-weight: 750; margin: 0 0 1.5rem; }
 .intro { color: var(--muted); font-size: 1.125rem; line-height: 1.8; margin: 0 0 1rem; }
 .hero-description { color: var(--muted); font-size: 1.0625rem; margin: 0 0 2rem; }
