@@ -179,6 +179,28 @@ h2 { margin: 0; font-size: clamp(2rem, 4vw, 2.5rem); line-height: 1.2; font-weig
 
 .skill-tags li { font-size: 0.75rem; color: var(--muted); background: var(--surface); border-radius: 0.4rem; padding: 0.3rem 0.6rem; }
 
+.contact-section { background: var(--page); border-top: 1px solid var(--border); }
+
+.contact-content { max-width: 47rem; text-align: center; }
+
+.contact-description { max-width: 32rem; margin: 1.25rem auto 2rem; color: var(--muted); }
+
+.contact-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+
+.contact-link { display: flex; align-items: center; text-align: left; gap: 1rem; flex: 1 1 16rem; padding: 1.2rem; min-width: 0; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--surface); transition: border-color 150ms, background-color 150ms; }
+
+.contact-link:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+.contact-link > svg:first-child { color: var(--accent); }
+
+.contact-link > svg:last-of-type { margin-left: auto; color: var(--muted); }
+
+.contact-link strong { display: block; font-size: 0.9375rem; font-weight: 650; overflow-wrap: anywhere; }
+
+.contact-link span span { display: block; color: var(--muted); font-size: 0.75rem; }
+
+.email-link { flex-basis: 100%; }
+
 @media (max-width: 63.99rem) {
   .hero-profile { gap: 2rem; }
   .portrait { width: 8rem; height: 8rem; border-radius: 1.25rem; }
@@ -219,6 +241,8 @@ h2 { margin: 0; font-size: clamp(2rem, 4vw, 2.5rem); line-height: 1.2; font-weig
 
 @media (max-width: 35.99rem) {
   .skills-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .contact-links { flex-direction: column; }
+  .contact-link { flex-basis: auto; }
 }
 
 @media (max-width: 23rem) {

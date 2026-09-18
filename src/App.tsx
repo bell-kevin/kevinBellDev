@@ -14,14 +14,6 @@ const SKILLS = [
   { label: 'Languages Spoken', icon: Languages, items: ['English (Native)', 'Spanish (Professional)', 'German (Elementary)'] },
 ];
 
-function Section({ id, children, className = '' }: { id: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section id={id} className={`py-24 px-6 ${className}`}>
-      <div className="max-w-5xl mx-auto">{children}</div>
-    </section>
-  );
-}
-
 export default function App() {
   const mobileMenu = useRef<HTMLDetailsElement>(null);
 
@@ -151,38 +143,32 @@ export default function App() {
           </div>
         </section>
 
-      {/* Contact */}
-      <Section id="contact" className="bg-slate-900">
-        <div>
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-4">Let's Connect</h2>
-            <p className="text-slate-400 mb-10 leading-relaxed">
-              I'm always open to interesting conversations, collaborations, and opportunities. Feel free to reach out through any of the channels below.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a
-                href="https://github.com/bell-kevin"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-all hover:scale-105 border border-white/10"
-              >
-                <Github size={18} />
-                <span>GitHub</span>
+        <section id="contact" className="section contact-section" aria-labelledby="contact-heading">
+          <div className="container contact-content">
+            <p className="eyebrow">Get in touch</p>
+            <h2 id="contact-heading">Let's connect.</h2>
+            <p className="contact-description">Have an idea, a question, or something interesting to share? I'd like to hear from you.</p>
+            <div className="contact-links">
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="contact-link">
+                <Github size={22} aria-hidden="true" />
+                <span><strong>GitHub</strong><span>Code and projects</span></span>
+                <ArrowUpRight size={18} aria-hidden="true" />
+                <span className="sr-only"> (opens in a new tab)</span>
               </a>
-              <a
-                href="https://www.linkedin.com/in/kev-bell/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-6 py-3.5 bg-[#0A66C2]/20 hover:bg-[#0A66C2]/30 text-white rounded-xl text-sm font-medium transition-all hover:scale-105 border border-[#0A66C2]/30"
-              >
-                <Linkedin size={18} />
-                <span>LinkedIn</span>
+              <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="contact-link">
+                <Linkedin size={22} aria-hidden="true" />
+                <span><strong>LinkedIn</strong><span>Experience and volunteering</span></span>
+                <ArrowUpRight size={18} aria-hidden="true" />
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+              <a href="mailto:kevinBell@Linux.com" className="contact-link email-link">
+                <Mail size={22} aria-hidden="true" />
+                <span><strong>kevinBell@Linux.com</strong><span>Send me an email</span></span>
+                <ArrowUpRight size={18} aria-hidden="true" />
               </a>
             </div>
           </div>
-        </div>
-      </Section>
-
+        </section>
       </main>
       {/* Footer */}
       <footer className="bg-slate-950 text-slate-500 text-sm text-center py-6 px-6">
