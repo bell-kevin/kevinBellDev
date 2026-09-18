@@ -64,25 +64,6 @@ html:not(.js) #about {
   min-height: calc(100vh - 4rem);
 }
 
-/* Scroll-reveal. Sections are only hidden up front when JavaScript is present
-   to reveal them again; otherwise they render visible. */
-.reveal {
-  transition:
-    opacity 0.7s ease,
-    transform 0.7s ease;
-}
-
-.js .reveal:not(.is-visible) {
-  opacity: 0;
-  transform: translateY(2rem);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .js .reveal:not(.is-visible) {
-    transform: none;
-  }
-}
-
 /* Mobile menu, driven by a checkbox so it opens and closes without JS.
    With JS, tapping a link also unchecks it (see App.tsx).
 
@@ -130,4 +111,9 @@ html:not(.js) #about {
   outline: 2px solid #34d399;
   outline-offset: 4px;
   border-radius: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
