@@ -1,41 +1,57 @@
-import { defineConfig, type Plugin } from 'vite';
+import { createServer, defineConfig, type Plugin, type ResolvedConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
 
 function prerender(): Plugin {
+  let config: ResolvedConfig;
+
   return {
     name: 'prerender-static-html',
     enforce: 'post',
     apply: 'build',
-    closeBundle: {
-      sequential: true,
+    configResolved(resolvedConfig) {
+      config = resolvedConfig;
+    },
+    generateBundle: {
       order: 'post',
-      async handler() {
-        const root = dirname(fileURLToPath(import.meta.url));
-        const distPath = resolve(root, 'dist/index.html');
-        let html: string;
-        try {
-          html = readFileSync(distPath, 'utf-8');
-        } catch {
-          return;
+      async handler(_options, bundle) {
+        if (config.build.ssr) return;
+
+        const page = bundle['index.html'];
+        if (!page || page.type !== 'asset' || typeof page.source !== 'string') {
+          this.error('Prerendering requires an index.html asset.');
         }
 
+        const html = page.source;
         const marker = '<div id="root"></div>';
-        if (!html.includes(marker)) return;
+        if (!html.includes(marker)) {
+          this.error('Prerendering requires an empty <div id="root"></div> in index.html.');
+        }
 
-        const { render } = await import('./src/entry-server.tsx');
-        const appHtml = render();
-        const rendered = html.replace(marker, `<div id="root">${appHtml}</div>`);
-        writeFileSync(distPath, rendered);
+        // Let Vite transform TSX before Node loads it. A separate configuration
+        // keeps this build-only renderer from recursively loading this plugin.
+        const renderer = await createServer({
+          configFile: false,
+          root: config.root,
+          mode: config.mode,
+          plugins: [react()],
+          appType: 'custom',
+          logLevel: 'error',
+          server: { middlewareMode: true, hmr: false, watch: null },
+          optimizeDeps: { noDiscovery: true, include: [] },
+        });
 
-        const added = Buffer.byteLength(rendered) - Buffer.byteLength(html);
-        console.log(
-          `prerendered dist/index.html (+${(added / 1024).toFixed(1)} kB of static markup)`
-        );
+        try {
+          const { render } = await renderer.ssrLoadModule('/src/entry-server.tsx');
+          const appHtml = render();
+          if (typeof appHtml !== 'string' || !appHtml.trim()) {
+            this.error('Prerendering returned no HTML. Refusing to ship an empty page.');
+          }
+          page.source = html.replace(marker, `<div id="root">${appHtml}</div>`);
+        } finally {
+          await renderer.close();
+        }
       },
     },
   };
@@ -54,7 +70,7 @@ export default defineConfig({
   // postcss.config.js sitting on disk is simply ignored.
   //
   // If `tailwindcss` is not installed, the imports above fail and the build
-  // stops with a clear module-not-found error. That is deliberate — a loud
+  // stops with a clear module-not-found error. That is deliberate: a loud
   // failure is correct here, because the quiet alternative is a live site with
   // no CSS. The fix is always `npm install`, never removing these plugins.
   css: {

@@ -10,7 +10,7 @@ const app = (
   </StrictMode>
 );
 
-// Production builds ship prerendered markup (see scripts/prerender.mjs), so
+// Production builds ship prerendered markup (see vite.config.ts), so
 // hydrate it instead of throwing it away. `vite dev` serves an empty root.
 if (container.hasChildNodes()) {
   hydrateRoot(container, app);
