@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Github, Linkedin, Mail, ArrowDown, ArrowUpRight, Menu, X, GraduationCap, Code2, Cloud, Database, Cpu, Globe, Languages } from 'lucide-react';
+import ThemeControl from './ThemeControl';
 
 const NAV_LINKS = ['About', 'Skills', 'Contact'];
 const GITHUB_URL = 'https://github.com/bell-kevin';
@@ -39,6 +40,7 @@ export default function App() {
           <nav className="desktop-nav" aria-label="Main navigation">
             {NAV_LINKS.map((link) => <a key={link} href={`#${link.toLowerCase()}`}>{link}</a>)}
           </nav>
+          <ThemeControl />
           <details
             ref={mobileMenu}
             className="mobile-navigation"
