@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Github, Linkedin, Mail, ArrowDown, ArrowUpRight, Menu, X, GraduationCap, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
+import { Github, Linkedin, Mail, ArrowDown, ArrowUpRight, Menu, X, GraduationCap, Code2, Cloud, Database, Cpu, Globe, Languages } from 'lucide-react';
 
 const NAV_LINKS = ['About', 'Skills', 'Contact'];
 const GITHUB_URL = 'https://github.com/bell-kevin';
@@ -11,7 +11,7 @@ const SKILLS = [
   { label: 'Computer Science', icon: Cpu, items: ['Formal System Design', 'Model Checking', 'Data Science Algorithms', 'ML/AI'] },
   { label: 'Databases', icon: Database, items: ['Data Pipelines', 'Analytics', 'Big Data', 'SQL'] },
   { label: 'Open Source', icon: Globe, items: ['FLOSS Advocacy', 'Git', 'GitHub', 'Open Collaboration'] },
-  { label: 'Languages Spoken', icon: Globe, items: ['English (Native)', 'Spanish (Professional)', 'German (Elementary)'] },
+  { label: 'Languages Spoken', icon: Languages, items: ['English (Native)', 'Spanish (Professional)', 'German (Elementary)'] },
 ];
 
 function Section({ id, children, className = '' }: { id: string; children: React.ReactNode; className?: string }) {
@@ -19,15 +19,6 @@ function Section({ id, children, className = '' }: { id: string; children: React
     <section id={id} className={`py-24 px-6 ${className}`}>
       <div className="max-w-5xl mx-auto">{children}</div>
     </section>
-  );
-}
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-3xl font-bold text-slate-900 mb-12 flex items-center gap-3">
-      <span className="w-8 h-0.5 bg-emerald-500 inline-block" />
-      {children}
-    </h2>
   );
 }
 
@@ -135,41 +126,30 @@ export default function App() {
           </div>
         </section>
 
-      {/* Skills */}
-      <Section id="skills" className="bg-slate-50">
-        <div>
-          <SectionHeading>Skills</SectionHeading>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SKILLS.map((skill, i) => {
-              const Icon = skill.icon;
-              return (
-                <div
-                  key={skill.label}
-                  className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-emerald-300 hover:shadow-md transition-all duration-300"
-                  style={{ transitionDelay: `${i * 50}ms` }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
-                      <Icon size={18} className="text-emerald-600" />
+        <section id="skills" className="section skills-section" aria-labelledby="skills-heading">
+          <div className="container">
+            <div className="section-heading">
+              <p className="eyebrow">What I work with</p>
+              <h2 id="skills-heading">Skills</h2>
+            </div>
+            <div className="skills-grid">
+              {SKILLS.map((skill) => {
+                const Icon = skill.icon;
+                return (
+                  <div key={skill.label} className="skill-card">
+                    <div className="skill-heading">
+                      <span className="skill-icon"><Icon size={20} aria-hidden="true" /></span>
+                      <h3>{skill.label}</h3>
                     </div>
-                    <h3 className="font-semibold text-slate-900">{skill.label}</h3>
+                    <ul className="skill-tags">
+                      {skill.items.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {skill.items.map((item) => (
-                      <span
-                        key={item}
-                        className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs rounded-lg"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </Section>
+        </section>
 
       {/* Contact */}
       <Section id="contact" className="bg-slate-900">
