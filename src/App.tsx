@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Github, Linkedin, Mail, ChevronDown, Menu, X, Award, Code2, Cloud, Database, Cpu, Globe } from 'lucide-react';
 
-const NAV_LINKS = ['About', 'Skills', 'Volunteering', 'Contact'];
+const NAV_LINKS = ['About', 'Skills', 'Contact'];
 
 const SKILLS = [
   { label: 'Languages', icon: Code2, items: ['Go', 'TypeScript', 'Python', 'C', 'JavaScript'] },
@@ -10,27 +10,6 @@ const SKILLS = [
   { label: 'Databases', icon: Database, items: ['Data Pipelines', 'Analytics', 'Big Data', 'SQL'] },
   { label: 'Open Source', icon: Globe, items: ['FLOSS Advocacy', 'Git', 'GitHub', 'Open Collaboration'] },
   { label: 'Languages Spoken', icon: Globe, items: ['English (Native)', 'Spanish (Professional)', 'German (Elementary)'] },
-];
-
-const VOLUNTEERING = [
-  {
-    org: 'Free Software Foundation',
-    roles: [
-      'LibrePlanet Utah Mail-List Administrator',
-      'LibrePlanet 2024 Online Chat Monitor',
-      'LibrePlanet 2023 Online Chat Monitor',
-    ],
-  },
-  {
-    org: 'The Church of Jesus Christ of Latter-day Saints',
-    roles: [
-      'Ward Mission Leader',
-      'Ward Executive Secretary',
-      'Elders Quorum First Counselor',
-      'Ward Temple & Family History Leader',
-      'Full-Time Missionary — Southern Georgia (Spanish-speaking)',
-    ],
-  },
 ];
 
 function useInView(threshold = 0.15) {
@@ -91,7 +70,6 @@ export default function App() {
   };
 
   const skillsAnim = useInView();
-  const volunteeringAnim = useInView();
   const contactAnim = useInView();
 
   return (
@@ -306,34 +284,6 @@ export default function App() {
                 </div>
               );
             })}
-          </div>
-        </div>
-      </Section>
-
-      {/* Volunteering */}
-      <Section id="volunteering" className="bg-white">
-        <div
-          ref={volunteeringAnim.ref}
-          className={`reveal ${volunteeringAnim.inView ? 'is-visible' : ''}`}
-        >
-          <SectionHeading>Volunteering</SectionHeading>
-          <div className="grid md:grid-cols-2 gap-8">
-            {VOLUNTEERING.map((v) => (
-              <div
-                key={v.org}
-                className="bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:border-emerald-300 hover:shadow-md transition-all duration-300"
-              >
-                <h3 className="font-bold text-slate-900 text-lg mb-4">{v.org}</h3>
-                <ul className="space-y-2">
-                  {v.roles.map((role) => (
-                    <li key={role} className="flex items-start gap-2 text-slate-600 text-sm">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                      {role}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
           </div>
         </div>
       </Section>
