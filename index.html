@@ -7,31 +7,55 @@
     <title>Kevin Bell</title>
     <meta
       name="description"
-      content="Kevin Bell — Software Engineer at the U.S. Department of War. M.S. Computer Science, FLOSS advocate, hackathon winner."
+      content="Kevin Bell, Software Engineer at the U.S. Department of Defense. M.S. Computer Science graduate and free/libre open-source software advocate."
     />
-    <!-- Marks the page as JavaScript-capable. Anything in the stylesheet that
-         depends on JS is scoped to html.js, so browsers with JavaScript
-         disabled fall back to a fully visible, static page. -->
+    <link rel="canonical" href="https://kevinbell.dev/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kevinbell.dev/" />
+    <meta property="og:title" content="Kevin Bell | Software Engineer" />
+    <meta
+      property="og:description"
+      content="Software Engineer at the U.S. Department of Defense. Computer science, data, and free/libre open-source software."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Kevin Bell | Software Engineer" />
+    <meta
+      name="twitter:description"
+      content="Software Engineer at the U.S. Department of Defense. Computer science, data, and free/libre open-source software."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Apply a saved preference before paint. CSS handles the OS preference. -->
     <script>
-      (function () {
-        var el = document.documentElement;
-        el.classList.add('js');
-        // The module bundle is deferred, so it runs before DOMContentLoaded.
-        // If it still hasn't reported in by then it never ran at all — blocked
-        // by an extension, 404'd after a deploy, or failed to parse. Drop back
-        // to the no-JS layout instead of leaving the scroll-reveal sections
-        // hidden forever behind a reveal that is never coming.
-        document.addEventListener('DOMContentLoaded', function () {
-          if (!el.classList.contains('js-ready')) el.classList.remove('js');
-        });
-      })();
+      try {
+        var theme = localStorage.getItem('kevinbell-theme');
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch (_) {
+        // The default Auto theme works when storage is unavailable.
+      }
+      // Native controls remain usable even if the main bundle fails to load.
+      document.addEventListener('change', function (event) {
+        var input = event.target;
+        if (input instanceof HTMLInputElement && input.name === 'theme' &&
+            (input.value === 'auto' || input.value === 'light' || input.value === 'dark')) {
+          document.documentElement.dataset.theme = input.value;
+          try {
+            localStorage.setItem('kevinbell-theme', input.value);
+          } catch (_) {
+            // The current visit still uses the selected theme.
+          }
+        }
+      });
     </script>
-    <meta property="og:image" content="https://bolt.new/static/og_default.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://bolt.new/static/og_default.png" />
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Sync the native selection before waiting for the React bundle.
+      var themeInput = document.getElementById('theme-' + (document.documentElement.dataset.theme || 'auto'));
+      if (themeInput) themeInput.checked = true;
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
