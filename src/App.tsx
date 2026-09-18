@@ -170,21 +170,12 @@ export default function App() {
           </div>
         </section>
       </main>
-      {/* Footer */}
-      <footer className="bg-slate-950 text-slate-500 text-sm text-center py-6 px-6">
-        {/* Prerendered at build time; the client may render a newer year, which
-            is a harmless difference rather than a hydration error. */}
-        <p suppressHydrationWarning>
-          Built with care &mdash; Kevin Bell &copy; {new Date().getFullYear()} &mdash;{' '}
-          <a
-            href="https://github.com/bell-kevin"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-emerald-400 transition-colors"
-          >
-            Open Source
-          </a>
-        </p>
+
+      <footer className="site-footer">
+        <div className="container footer-content">
+          <p suppressHydrationWarning>&copy; {new Date().getFullYear()} Kevin Bell</p>
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">Find me on GitHub <ArrowUpRight size={14} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span></a>
+        </div>
       </footer>
     </>
   );

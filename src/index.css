@@ -201,6 +201,14 @@ h2 { margin: 0; font-size: clamp(2rem, 4vw, 2.5rem); line-height: 1.2; font-weig
 
 .email-link { flex-basis: 100%; }
 
+.site-footer { border-top: 1px solid var(--border); background: var(--surface); padding-block: 1.5rem; color: var(--muted); font-size: 0.75rem; }
+
+.footer-content { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+
+.site-footer p { margin: 0; }
+
+.site-footer a { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 2.75rem; }
+
 @media (max-width: 63.99rem) {
   .hero-profile { gap: 2rem; }
   .portrait { width: 8rem; height: 8rem; border-radius: 1.25rem; }
@@ -243,6 +251,7 @@ h2 { margin: 0; font-size: clamp(2rem, 4vw, 2.5rem); line-height: 1.2; font-weig
   .skills-grid { grid-template-columns: 1fr; gap: 1rem; }
   .contact-links { flex-direction: column; }
   .contact-link { flex-basis: auto; }
+  .footer-content { flex-direction: column; gap: 0.2rem; }
 }
 
 @media (max-width: 23rem) {
