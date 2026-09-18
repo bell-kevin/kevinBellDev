@@ -33,3 +33,11 @@ theme choices, and contact links at phone, tablet, and desktop widths.
 The Auto theme follows the operating system preference. Light and Dark can be
 selected without JavaScript. With JavaScript enabled, the chosen setting is
 also remembered in local storage when the browser allows it.
+
+## Readability
+
+Keep normal text at or above the [WCAG enhanced contrast target of 7:1](https://www.w3.org/WAI/WCAG22/Understanding/contrast-enhanced.html)
+in both themes, including button and link hover states. Check the hero's
+decorative layers as well as solid backgrounds when changing the palette.
+Verify the theme selection and keyboard focus remain visible in the operating
+system's high-contrast mode, and check the layout with enlarged text.
