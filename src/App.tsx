@@ -49,7 +49,8 @@ export default function App() {
 
 
   return (
-    <div className="font-sans text-slate-800 antialiased">
+    <>
+      <a className="skip-link" href="#main-content">Skip to content</a>
       {/* Nav */}
       <header
         className={`site-header top-0 inset-x-0 z-50 transition-all duration-300 ${
@@ -118,6 +119,7 @@ export default function App() {
         </div>
       </header>
 
+      <main id="main-content" tabIndex={-1}>
       {/* Hero */}
       <div id="about" className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-slate-900">
         {/* Background grid */}
@@ -293,6 +295,7 @@ export default function App() {
         </div>
       </Section>
 
+      </main>
       {/* Footer */}
       <footer className="bg-slate-950 text-slate-500 text-sm text-center py-6 px-6">
         {/* Prerendered at build time; the client may render a newer year, which
@@ -309,6 +312,6 @@ export default function App() {
           </a>
         </p>
       </footer>
-    </div>
+    </>
   );
 }
