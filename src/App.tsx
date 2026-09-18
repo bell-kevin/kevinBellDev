@@ -36,7 +36,7 @@ export default function App() {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <header className="site-header">
         <div className="container header-content">
-          <a href="#about" className="site-name" onClick={closeMenu}>Kevin Bell<span aria-hidden="true">.</span></a>
+          <a href="#about" className="site-name" onClick={closeMenu}>Kevin Bell</a>
           <nav className="desktop-nav" aria-label="Main navigation">
             {NAV_LINKS.map((link) => <a key={link} href={`#${link.toLowerCase()}`}>{link}</a>)}
           </nav>
