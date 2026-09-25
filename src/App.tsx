@@ -95,7 +95,7 @@ export default function App() {
                   <a href="#contact" className="button button-primary"><Mail size={18} aria-hidden="true" /> Get in touch</a>
                 </div>
                 <ul className="tags" aria-label="Highlights">
-                  {['United States Dept. of Defense', 'FLOSS Advocate', 'Hackathon Winner'].map((tag) => <li key={tag}>{tag}</li>)}
+                  {['US Dept. of Defense', 'FLOSS Advocate', 'Hackathon Winner'].map((tag) => <li key={tag}>{tag}</li>)}
                 </ul>
               </div>
             </div>
