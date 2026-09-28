@@ -34,6 +34,51 @@ The Auto theme follows the operating system preference. Light and Dark can be
 selected without JavaScript. With JavaScript enabled, the chosen setting is
 also remembered in local storage when the browser allows it.
 
+## Visitor statistics
+
+A private dashboard at https://kevinbell.dev/stats/ shows visits in aggregate
+and one by one: when, approximate location and network, browser, device,
+referring site, time with the page visible, how far down the page people
+scrolled, and which links they clicked. Only the GitHub account `bell-kevin`
+can sign in.
+
+How it fits together:
+
+- `src/analytics/tracker.ts` runs on the public page in production builds and
+  sends the visit to `/api/collect` when it starts, when an outbound link is
+  clicked, and when the tab is hidden or closed. It skips browsers that send
+  Global Privacy Control or Do Not Track, automated browsers, and any browser
+  that has signed in to the dashboard.
+- Visitors with JavaScript disabled are counted by the `<noscript>` image in
+  `index.html`.
+- `netlify/functions/` holds the server side: `collect` adds the IP address,
+  location, and parsed browser to each visit; `auth` handles GitHub sign-in;
+  `stats` serves the data to the signed-in owner; `compact` runs daily. Visits
+  are kept in a Netlify Blobs store named `visits`, which needs no setup.
+- `stats/index.html` and `src/stats/` are the dashboard.
+
+### Enabling sign-in
+
+1. Create a GitHub OAuth app at https://github.com/settings/applications/new
+   with the homepage URL `https://kevinbell.dev` and the authorization
+   callback URL `https://kevinbell.dev/api/auth/callback`.
+2. Generate a client secret for it.
+3. In Netlify, under Site configuration → Environment variables, add
+   `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (mark the secret as secret),
+   then redeploy.
+
+Sign-in asks GitHub for nothing but the public profile. Sessions last 14 days;
+generating a new client secret and updating it in Netlify signs every session
+out. To let a different account in, change `OWNER_GITHUB_ID` in
+`netlify/lib/session.ts`.
+
+### Working on the dashboard
+
+`npm run dev` serves the dashboard at http://localhost:5173/stats/ with sample
+data, because the Vite dev server doesn't run Netlify Functions. Use
+`netlify dev` from the Netlify CLI to run the functions and a local Blobs store
+together. `npm run typecheck` checks the functions as well as the site.
+
 ## Readability
 
 Keep normal text at or above the [WCAG enhanced contrast target of 7:1](https://www.w3.org/WAI/WCAG22/Understanding/contrast-enhanced.html)

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Site statistics · Kevin Bell</title>
+    <script>
+      // Match the theme chosen on the main site before paint.
+      try {
+        var theme = localStorage.getItem('kevinbell-theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch (_) {
+        // Auto follows the operating system.
+      }
+    </script>
+  </head>
+  <body>
+    <div id="stats-root"></div>
+    <noscript><p class="noscript">The private statistics page needs JavaScript.</p></noscript>
+    <script type="module" src="/src/stats/main.tsx"></script>
+  </body>
+</html>
