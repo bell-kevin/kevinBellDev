@@ -1,6 +1,6 @@
+import { statsOrigin } from './origin';
 import { LIMITS, OWNER_KEY, UTM_KEYS, type Beacon, type LinkClick, type PageView, type Utm } from './types';
 
-const ENDPOINT = '/api/collect';
 const VISIT_KEY = 'kevinbell-visit';
 const VISITOR_KEY = 'kevinbell-visitor';
 /** Coming back after this long hidden starts a new visit. */
@@ -44,6 +44,18 @@ const session = () => window.sessionStorage;
 
 function randomId(bytes: number) {
   return Array.from(crypto.getRandomValues(new Uint8Array(bytes)), (b) => b.toString(36).padStart(2, '0')).join('');
+}
+
+/**
+ * The dashboard links to `/?stats-owner=1` so the owner can stop counting a
+ * browser on a site the sign-in cookie doesn't reach.
+ */
+function claimOwner() {
+  const url = new URL(location.href);
+  if (url.searchParams.get('stats-owner') !== '1') return;
+  storageSet(local, OWNER_KEY, '1');
+  url.searchParams.delete('stats-owner');
+  history.replaceState(history.state, '', url);
 }
 
 function trackingAllowed() {
@@ -131,8 +143,10 @@ function scrollDepth() {
 }
 
 export function startTracking() {
+  claimOwner();
   if (!trackingAllowed()) return;
 
+  const endpoint = `${statsOrigin()}/api/collect`;
   const visitor = visitorId();
   const now = Date.now();
   // A saved visit carries on across page loads in the same tab.
@@ -176,11 +190,12 @@ export function startTracking() {
 
     const body = JSON.stringify(beacon);
     try {
-      if (navigator.sendBeacon?.(ENDPOINT, body)) return;
+      if (navigator.sendBeacon?.(endpoint, body)) return;
     } catch {
       // Fall through to fetch.
     }
-    fetch(ENDPOINT, { method: 'POST', body, keepalive: true, credentials: 'omit' }).catch(() => {
+    // A plain-text POST needs no CORS preflight, even to another origin.
+    fetch(endpoint, { method: 'POST', body, keepalive: true, credentials: 'omit', mode: 'no-cors' }).catch(() => {
       // Analytics must never disturb the page.
     });
   };

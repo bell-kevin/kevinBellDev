@@ -57,20 +57,32 @@ How it fits together:
   are kept in a Netlify Blobs store named `visits`, which needs no setup.
 - `stats/index.html` and `src/stats/` are the dashboard.
 
+Hosting, for now: kevinbell.dev is published from Bolt, whose Publish button
+uploads static files only, so the functions run on a separate Netlify project,
+`kevinbell-dev`, which deploys `main` from GitHub automatically. Pages on
+kevinbell.dev send visits to https://kevinbell-dev.netlify.app, and
+kevinbell.dev/stats/ forwards to the dashboard there. When kevinbell.dev moves
+to that project, set `STATS_ORIGIN` in `src/analytics/origin.ts` to `''` and
+point the `<noscript>` image in `index.html` back at `/api/collect`.
+
 ### Enabling sign-in
 
 1. Create a GitHub OAuth app at https://github.com/settings/applications/new
    with the homepage URL `https://kevinbell.dev` and the authorization
    callback URL `https://kevinbell.dev/api/auth/callback`.
 2. Generate a client secret for it.
-3. In Netlify, under Site configuration → Environment variables, add
-   `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (mark the secret as secret),
-   then redeploy.
+3. In the Netlify project that runs the functions, under Environment
+   variables, add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (mark the
+   secret as secret), then redeploy. The OAuth app needs a redirect URI for
+   each address the dashboard is used from, such as
+   `https://kevinbell-dev.netlify.app/api/auth/callback`.
 
 Sign-in asks GitHub for nothing but the public profile. Sessions last 14 days;
 generating a new client secret and updating it in Netlify signs every session
 out. To let a different account in, change `OWNER_GITHUB_ID` in
-`netlify/lib/session.ts`.
+`netlify/lib/session.ts`. The dashboard's footnote has a link that stops
+counting your browser on kevinbell.dev, which the sign-in cookie on the
+Netlify project can't reach.
 
 ### Working on the dashboard
 

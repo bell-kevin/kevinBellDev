@@ -1,4 +1,5 @@
 import type { Config, Context } from '@netlify/functions';
+import { REMOTE_HOSTS } from '../../src/analytics/origin';
 import { LIMITS, UTM_KEYS, type Beacon, type LinkClick, type PageView, type Utm, type Visit } from '../../src/analytics/types';
 import { readSession } from '../lib/session';
 import { isBot, parseUserAgent } from '../lib/useragent';
@@ -15,6 +16,8 @@ export const config: Config = {
 };
 
 const MAX_BODY = 64 * 1024;
+/** Other sites whose pages report here (see src/analytics/origin.ts). */
+const REPORTING_ORIGINS = REMOTE_HOSTS.map((host) => `https://${host}`);
 const TRANSPARENT_GIF = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), (char) => char.charCodeAt(0));
 
 const noContent = () => new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
@@ -112,7 +115,9 @@ function newVisit(id: string, req: Request, context: Context, now: number): Visi
 
 async function recordBeacon(req: Request, context: Context, now: number) {
   const origin = req.headers.get('origin');
-  if (origin && origin !== new URL(req.url).origin) return new Response('Forbidden', { status: 403 });
+  if (origin && origin !== new URL(req.url).origin && !REPORTING_ORIGINS.includes(origin)) {
+    return new Response('Forbidden', { status: 403 });
+  }
 
   const body = await req.text();
   if (body.length > MAX_BODY) return new Response('Payload too large', { status: 413 });
