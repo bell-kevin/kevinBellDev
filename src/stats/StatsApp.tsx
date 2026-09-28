@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Github, Lock, LogOut, RefreshCw } from 'lucide-react';
+import { REMOTE_HOSTS, STATS_ORIGIN } from '../analytics/origin';
 import { OWNER_KEY, type StatsResponse, type Visit } from '../analytics/types';
 import { RANGES, breakdowns, hoursOfDay, rangeBounds, summarize, timeline, type Range } from './aggregate';
 import { BarList, ColumnChart } from './charts';
@@ -42,7 +43,11 @@ async function fetchStats(range: Range): Promise<{ data: StatsResponse; demo: bo
     const { demoStats } = await import('./demo');
     return { data: demoStats(from, to), demo: true };
   }
-  throw new Error(`The statistics service answered ${response?.status ?? 'nothing'}.`);
+  throw new Error(
+    response?.ok
+      ? 'This copy of the site has no statistics service. The dashboard runs where the Netlify Functions do.'
+      : `The statistics service answered ${response?.status ?? 'nothing'}.`,
+  );
 }
 
 function SignIn({ error }: { error: string | null }) {
@@ -165,6 +170,12 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
 
         <p className="footnote">
           Your own visits aren’t counted while you’re signed in, or ever from this browser. Visitors who send Global Privacy Control or Do Not Track aren’t counted. Locations are approximate, from each visitor’s IP address.
+          {STATS_ORIGIN && location.origin === STATS_ORIGIN && (
+            <>
+              {' '}To stop counting this browser on kevinbell.dev too,{' '}
+              <a className="text-button" href={`https://${REMOTE_HOSTS[0]}/?stats-owner=1`}>open kevinbell.dev from this link</a> once.
+            </>
+          )}
         </p>
       </main>
     </>
