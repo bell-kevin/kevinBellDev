@@ -51,6 +51,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Counts visits with JavaScript disabled for the private stats page. -->
+    <noscript><img src="/api/collect" alt="" width="1" height="1" style="position: absolute" /></noscript>
     <script>
       // Sync the native selection before waiting for the React bundle.
       var themeInput = document.getElementById('theme-' + (document.documentElement.dataset.theme || 'auto'));

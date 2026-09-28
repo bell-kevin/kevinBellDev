@@ -1,0 +1,11 @@
+# The private statistics page. Its data comes from /api/stats, which requires
+# the owner's sign-in; these headers keep the page itself out of search results
+# and out of other sites' frames.
+/stats
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+/stats/*
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'

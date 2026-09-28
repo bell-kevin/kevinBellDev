@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { createServer, defineConfig, type Plugin, type ResolvedConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from 'tailwindcss';
@@ -76,6 +77,16 @@ export default defineConfig({
   css: {
     postcss: {
       plugins: [tailwindcss(), autoprefixer()],
+    },
+  },
+  build: {
+    rolldownOptions: {
+      // The private statistics page is a second, client-rendered page. The
+      // prerender plugin above only touches index.html.
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        stats: fileURLToPath(new URL('./stats/index.html', import.meta.url)),
+      },
     },
   },
   optimizeDeps: {
