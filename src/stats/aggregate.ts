@@ -90,6 +90,20 @@ export function breakdowns(visits: Visit[]): Breakdown[] {
       }))),
     },
     {
+      // A country's first-level division: a US state, a Canadian province, and so on.
+      id: 'regions',
+      title: 'States and regions',
+      unit: 'visits',
+      rows: tally(visits.map((visit) => {
+        const { region, countryCode } = visit.location;
+        return {
+          key: `${region}|${countryCode}`,
+          label: region ?? 'Unknown',
+          detail: countryCode,
+        };
+      })),
+    },
+    {
       id: 'cities',
       title: 'Cities',
       unit: 'visits',
