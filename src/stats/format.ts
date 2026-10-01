@@ -9,7 +9,11 @@ export const formatNumber = (value: number) => numberFormat.format(value);
 export const formatCompact = (value: number) => (value < 10_000 ? numberFormat.format(value) : compactFormat.format(value));
 export const formatDateTime = (ms: number) => dateTime.format(ms);
 export const formatLongDateTime = (ms: number) => longDateTime.format(ms);
-export const formatPercent = (part: number, whole: number) => (whole ? `${Math.round((part / whole) * 100)}%` : '0%');
+export function formatPercent(part: number, whole: number) {
+  const percent = whole ? Math.round((part / whole) * 100) : 0;
+  return part > 0 && percent === 0 ? '<1%' : `${percent}%`;
+}
+export const plural = (value: number, [one, many]: [string, string]) => `${formatNumber(value)} ${value === 1 ? one : many}`;
 
 export function formatDuration(ms: number) {
   const seconds = Math.round(ms / 1000);

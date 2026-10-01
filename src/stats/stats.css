@@ -1,5 +1,7 @@
 /* The private statistics page. Colors match the main site (src/index.css);
-   chart colors were checked for contrast against both card surfaces. */
+   chart colors were checked for contrast against both card surfaces. The map's
+   ramp is one green, each step clearly lighter or darker than the next, darker
+   for more visits on a light card and brighter for more on a dark one. */
 
 :root {
   color-scheme: light;
@@ -21,6 +23,13 @@
   --hover: rgb(5 84 56 / 0.06);
   --notice: #fff6dc;
   --notice-border: #e8cf85;
+  /* The map's land, then its ramp from fewest visits to most. */
+  --map-land: #e1eae5;
+  --map-1: #62c998;
+  --map-2: #41aa7b;
+  --map-3: #198d60;
+  --map-4: #006e48;
+  --map-5: #005033;
 }
 
 :root[data-theme='dark'] {
@@ -43,6 +52,12 @@
   --hover: rgb(138 225 185 / 0.08);
   --notice: #3a3218;
   --notice-border: #6d5d2a;
+  --map-land: #2e4137;
+  --map-1: #00734c;
+  --map-2: #239365;
+  --map-3: #4ab283;
+  --map-4: #6cd2a1;
+  --map-5: #8ef4c1;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -66,6 +81,12 @@
     --hover: rgb(138 225 185 / 0.08);
     --notice: #3a3218;
     --notice-border: #6d5d2a;
+    --map-land: #2e4137;
+    --map-1: #00734c;
+    --map-2: #239365;
+    --map-3: #4ab283;
+    --map-4: #6cd2a1;
+    --map-5: #8ef4c1;
   }
 }
 
@@ -193,6 +214,38 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 .table-view thead th { color: var(--faint); font-weight: 600; }
 .table-view td { font-variant-numeric: tabular-nums; text-align: right; }
 
+/* United States map (src/stats/usmap.tsx). Borders are drawn in the card
+   color, as gaps between places rather than lines around them. */
+.map-heading { flex-wrap: wrap; align-items: center; }
+.map-frame { max-width: 54rem; margin-inline: auto; }
+.map-plot { position: relative; }
+.map-plot:focus-visible { outline-offset: 6px; }
+.map-plot svg { display: block; width: 100%; height: auto; }
+.map-placeholder { display: grid; place-items: center; aspect-ratio: 975 / 610; border-radius: 0.75rem; background: var(--surface); color: var(--faint); }
+.map-placeholder p { margin: 0; }
+.map-land { fill: var(--map-land); }
+.map-fills path { fill: var(--shade); }
+.map-counties path { stroke: var(--card); stroke-width: 0.75; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.map-borders { fill: none; stroke: var(--card); stroke-width: 1; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.map-active { fill: none; stroke: var(--text); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+/* 8px dots on a 2px ring of the card color, or of the text color when read. */
+.map-dots path { fill: none; stroke: var(--shade); stroke-width: 8; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.map-dots .ring { stroke: var(--card); stroke-width: 12; }
+.map-dots .ring.active { stroke: var(--text); }
+.shade-1 { --shade: var(--map-1); }
+.shade-2 { --shade: var(--map-2); }
+.shade-3 { --shade: var(--map-3); }
+.shade-4 { --shade: var(--map-4); }
+.shade-5 { --shade: var(--map-5); }
+.map-tooltip { bottom: auto; width: max-content; max-width: 100%; white-space: normal; }
+.map-key { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; max-width: 54rem; margin: 0.75rem auto 0; color: var(--faint); font-size: 0.8125rem; }
+.map-table { max-width: 54rem; margin-inline: auto; }
+.map-key p { flex-basis: 100%; margin: 0; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.map-legend li { display: flex; flex-direction: column; gap: 0.25rem; min-width: 2.75rem; }
+.map-legend li:first-child { margin-right: 0.5rem; }
+.swatch { display: block; height: 0.625rem; border-radius: 2px; background: var(--shade, var(--map-land)); }
+
 /* Breakdown bar lists. */
 .breakdowns { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 1.25rem; }
 .breakdown { padding: 1.25rem; }
@@ -284,4 +337,6 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
   .segmented input:checked + span, .theme-option input:checked + span { outline: 2px solid CanvasText; outline-offset: -2px; }
   .theme-option input:focus-visible + span { outline: 2px solid Highlight; outline-offset: 2px; }
   .slot.active { outline: 1px solid Highlight; }
+  .map-plot svg, .swatch { forced-color-adjust: none; }
+  .map-active, .map-dots .ring.active { stroke: Highlight; }
 }

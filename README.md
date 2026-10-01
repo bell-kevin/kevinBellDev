@@ -56,6 +56,12 @@ How it fits together:
   `stats` serves the data to the signed-in owner; `compact` runs daily. Visits
   are kept in a Netlify Blobs store named `visits`, which needs no setup.
 - `stats/index.html` and `src/stats/` are the dashboard.
+- `src/stats/geo.ts` places visits from the United States in states and
+  counties for the dashboard's map and county list. Netlify's geolocation
+  reports no county, so a visit's county is the one holding its approximate
+  coordinates, using the Census Bureau's 2017 county boundaries from the
+  `us-atlas` package. Visits located only to a state or the country get no
+  county. The boundaries download only with the dashboard.
 
 Hosting, for now: kevinbell.dev is published from Bolt, whose Publish button
 uploads static files only, so the functions run on a separate Netlify project,

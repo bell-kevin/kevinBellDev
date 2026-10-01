@@ -3,9 +3,11 @@ import { ArrowLeft, Github, Lock, LogOut, RefreshCw } from 'lucide-react';
 import { REMOTE_HOSTS, STATS_ORIGIN } from '../analytics/origin';
 import { OWNER_KEY, type StatsResponse, type Visit } from '../analytics/types';
 import ThemeControl from '../ThemeControl';
-import { RANGES, breakdowns, hoursOfDay, rangeBounds, summarize, timeline, type Range } from './aggregate';
+import { RANGES, breakdowns, hoursOfDay, rangeBounds, summarize, timeline, type AtlasState, type Range } from './aggregate';
 import { BarList, ColumnChart } from './charts';
 import { formatCompact, formatDuration, formatPercent, visitorKey } from './format';
+import type { Atlas } from './geo';
+import { UsMap } from './usmap';
 import { VisitDialog, VisitsTable } from './visits';
 
 type State =
@@ -51,6 +53,28 @@ async function fetchStats(range: Range): Promise<{ data: StatsResponse; demo: bo
   );
 }
 
+let atlasRequest: Promise<Atlas> | undefined;
+
+/** Loads the state and county outlines once the dashboard shows, in their own chunk. */
+function useAtlas() {
+  const [atlas, setAtlas] = useState<AtlasState>('loading');
+  useEffect(() => {
+    let current = true;
+    atlasRequest ??= import('./geo').then((geo) => geo.loadAtlas()).catch((error: unknown) => {
+      atlasRequest = undefined;
+      throw error;
+    });
+    atlasRequest.then(
+      (loaded) => current && setAtlas(loaded),
+      () => current && setAtlas('error'),
+    );
+    return () => {
+      current = false;
+    };
+  }, []);
+  return atlas;
+}
+
 function SignIn({ error }: { error: string | null }) {
   return (
     <main className="sign-in">
@@ -88,9 +112,10 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
   onRefresh: () => void;
 }) {
   const [selected, setSelected] = useState<Visit | null>(null);
+  const atlas = useAtlas();
   const { visits } = data;
   const summary = useMemo(() => summarize(visits), [visits]);
-  const lists = useMemo(() => breakdowns(visits), [visits]);
+  const lists = useMemo(() => breakdowns(visits, atlas), [visits, atlas]);
   const buckets = useMemo(() => timeline(visits, range, data.from, data.to), [visits, range, data.from, data.to]);
   const hours = useMemo(() => hoursOfDay(visits), [visits]);
   const visitCounts = useMemo(() => {
@@ -163,6 +188,8 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
             <ColumnChart label="Visits by hour of day" buckets={hours} />
           </section>
         )}
+
+        <UsMap atlas={atlas} visits={visits} />
 
         <div className="breakdowns">
           {lists.map((breakdown) => <BarList key={breakdown.id} breakdown={breakdown} />)}
