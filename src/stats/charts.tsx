@@ -1,6 +1,6 @@
 import { useId, useState, type KeyboardEvent } from 'react';
 import type { Breakdown, Bucket } from './aggregate';
-import { formatCompact, formatNumber, formatPercent } from './format';
+import { formatCompact, formatNumber, formatPercent, plural } from './format';
 
 /** Round axis ticks: 0 and two or three steps of 1, 2, or 5 × 10ⁿ. */
 function scale(max: number) {
@@ -13,8 +13,6 @@ function scale(max: number) {
   for (let tick = 0; tick <= top; tick += step) ticks.push(tick);
   return { top, ticks };
 }
-
-const plural = (value: number, [one, many]: [string, string]) => `${formatNumber(value)} ${value === 1 ? one : many}`;
 
 export function ColumnChart({ label, buckets, unit = ['visit', 'visits'] }: { label: string; buckets: Bucket[]; unit?: [string, string] }) {
   const [active, setActive] = useState<number | null>(null);
@@ -110,7 +108,7 @@ export function BarList({ breakdown, limit = 8 }: { breakdown: Breakdown; limit?
         <span>{breakdown.unit}</span>
       </div>
       {rows.length === 0 ? (
-        <p className="empty">None in this period.</p>
+        <p className="empty">{breakdown.note ?? 'None in this period.'}</p>
       ) : (
         <table className="bar-list">
           <colgroup>

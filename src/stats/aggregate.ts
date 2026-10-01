@@ -1,5 +1,9 @@
 import type { Visit } from '../analytics/types';
 import { browserName, deviceName, flag, languageName, source, visitorKey } from './format';
+import type { Atlas } from './geo';
+
+/** The state and county outlines, which load after the rest of the page. */
+export type AtlasState = Atlas | 'loading' | 'error';
 
 export interface Range {
   id: string;
@@ -76,9 +80,17 @@ export interface Breakdown {
   title: string;
   unit: string;
   rows: Row[];
+  /** Shown instead of the rows while they can't be counted yet. */
+  note?: string;
 }
 
-export function breakdowns(visits: Visit[]): Breakdown[] {
+const COUNTY_NOTES = {
+  loading: 'Loading county outlines…',
+  error: 'County outlines didn’t load. Reload the page to try again.',
+};
+
+export function breakdowns(visits: Visit[], atlas: AtlasState): Breakdown[] {
+  const us = visits.filter((visit) => visit.location.countryCode === 'US');
   return [
     {
       id: 'countries',
@@ -104,6 +116,18 @@ export function breakdowns(visits: Visit[]): Breakdown[] {
       })),
     },
     {
+      id: 'counties',
+      title: 'US counties',
+      unit: 'visits',
+      rows: typeof atlas === 'string' ? [] : tally(us.map((visit) => {
+        const county = atlas.countyOf(visit);
+        if (!county) return { key: '?', label: 'Unknown' };
+        // The District of Columbia is its own state and county.
+        return { key: county.id, label: county.name, detail: county.state.name === county.name ? undefined : county.state.name };
+      })),
+      note: typeof atlas === 'string' ? COUNTY_NOTES[atlas] : undefined,
+    },
+    {
       id: 'cities',
       title: 'Cities',
       unit: 'visits',
@@ -114,6 +138,15 @@ export function breakdowns(visits: Visit[]): Breakdown[] {
           label: city ?? 'Unknown',
           detail: [region, countryCode].filter(Boolean).join(', '),
         };
+      })),
+    },
+    {
+      id: 'zip-codes',
+      title: 'US ZIP codes',
+      unit: 'visits',
+      rows: tally(us.map((visit) => {
+        const { postalCode, city, region } = visit.location;
+        return postalCode ? { key: postalCode, label: postalCode, detail: [city, region].filter(Boolean).join(', ') } : { key: '?', label: 'Unknown' };
       })),
     },
     { id: 'sources', title: 'Sources', unit: 'visits', rows: simple(visits, source) },
@@ -134,6 +167,28 @@ export function breakdowns(visits: Visit[]): Breakdown[] {
     { id: 'languages', title: 'Languages', unit: 'visits', rows: simple(visits, (visit) => languageName(visit.language)) },
     { id: 'screens', title: 'Screen sizes', unit: 'visits', rows: simple(visits, (visit) => visit.screen || 'Unknown') },
   ];
+}
+
+export interface MapCounts {
+  /** Every visit from the United States, placed on the map or not. */
+  total: number;
+  /** Visits by state or county FIPS code. */
+  states: Map<string, number>;
+  counties: Map<string, number>;
+}
+
+export function mapCounts(visits: Visit[], atlas: Atlas): MapCounts {
+  const counts: MapCounts = { total: 0, states: new Map(), counties: new Map() };
+  const add = (map: Map<string, number>, id: string | undefined) => {
+    if (id) map.set(id, (map.get(id) ?? 0) + 1);
+  };
+  for (const visit of visits) {
+    if (visit.location.countryCode !== 'US') continue;
+    counts.total += 1;
+    add(counts.states, atlas.stateOf(visit)?.id);
+    add(counts.counties, atlas.countyOf(visit)?.id);
+  }
+  return counts;
 }
 
 export interface Bucket {

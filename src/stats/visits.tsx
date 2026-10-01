@@ -22,6 +22,7 @@ function searchText(visit: Visit) {
   return [
     place(visit),
     visit.location.countryCode,
+    visit.location.postalCode,
     visit.ip,
     browserName(visit),
     visit.os,
