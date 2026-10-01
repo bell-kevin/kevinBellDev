@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Github, Lock, LogOut, RefreshCw } from 'lucide-react';
 import { REMOTE_HOSTS, STATS_ORIGIN } from '../analytics/origin';
 import { OWNER_KEY, type StatsResponse, type Visit } from '../analytics/types';
+import ThemeControl from '../ThemeControl';
 import { RANGES, breakdowns, hoursOfDay, rangeBounds, summarize, timeline, type Range } from './aggregate';
 import { BarList, ColumnChart } from './charts';
 import { formatCompact, formatDuration, formatPercent, visitorKey } from './format';
@@ -53,6 +54,7 @@ async function fetchStats(range: Range): Promise<{ data: StatsResponse; demo: bo
 function SignIn({ error }: { error: string | null }) {
   return (
     <main className="sign-in">
+      <ThemeControl />
       <div className="card sign-in-card">
         <span className="sign-in-icon"><Lock size={22} aria-hidden="true" /></span>
         <h1>Site statistics</h1>
@@ -105,9 +107,10 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
         <div className="stats-container header-row">
           <a className="site-name" href="/">Kevin Bell</a>
           <span className="header-title">Site statistics</span>
+          <ThemeControl />
           <span className="viewer">@{data.viewer.login}</span>
           <form method="post" action="/api/auth/logout">
-            <button type="submit" className="button button-secondary compact"><LogOut size={16} aria-hidden="true" /> Sign out</button>
+            <button type="submit" className="button button-secondary compact sign-out"><LogOut size={16} aria-hidden="true" /> <span>Sign out</span></button>
           </form>
         </div>
       </header>
@@ -222,6 +225,7 @@ export default function StatsApp() {
   if (state.status === 'error') {
     return (
       <main className="sign-in">
+        <ThemeControl />
         <div className="card sign-in-card">
           <h1>Statistics are unavailable</h1>
           <p role="alert">{state.message}</p>

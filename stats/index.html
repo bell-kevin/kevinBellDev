@@ -8,7 +8,8 @@
     <meta name="color-scheme" content="light dark" />
     <title>Site statistics · Kevin Bell</title>
     <script>
-      // Match the theme chosen on the main site before paint.
+      // Apply a saved Light or Dark choice before paint. This page's theme
+      // control and the main site's save it under the same key.
       try {
         var theme = localStorage.getItem('kevinbell-theme');
         if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
