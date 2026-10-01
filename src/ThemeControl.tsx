@@ -14,8 +14,12 @@ export default function ThemeControl() {
   useEffect(() => {
     const selectTheme = (theme: Theme) => {
       document.documentElement.dataset.theme = theme;
-      const input = control.current?.querySelector<HTMLInputElement>(`input[value="${theme}"]`);
-      if (input) input.checked = true;
+      // Set every option, not only the chosen one: React compares each radio
+      // with the last `checked` value assigned to it, so an option the browser
+      // unchecked by itself would not call onChange when picked again.
+      control.current?.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
+        input.checked = input.value === theme;
+      });
     };
 
     // The prerendered radios also work with CSS alone. Hydration preserves any

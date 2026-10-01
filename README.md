@@ -65,6 +65,11 @@ kevinbell.dev/stats/ forwards to the dashboard there. When kevinbell.dev moves
 to that project, set `STATS_ORIGIN` in `src/analytics/origin.ts` to `''` and
 point the `<noscript>` image in `index.html` back at `/api/collect`.
 
+The dashboard has the same Auto, Light, and Dark theme control as the main
+page; Auto follows the operating system. Browsers remember the choice per site,
+so while the dashboard runs on the Netlify project, a choice made on
+kevinbell.dev doesn't carry over: pick it once on the dashboard.
+
 ### Enabling sign-in
 
 1. Create a GitHub OAuth app at https://github.com/settings/applications/new

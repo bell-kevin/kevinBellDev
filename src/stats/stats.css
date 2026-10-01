@@ -110,6 +110,16 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 .chip span { font-family: ui-sans-serif, system-ui, sans-serif; color: var(--faint); }
 .notice { margin: 0 0 1.25rem; padding: 0.75rem 1rem; border: 1px solid var(--notice-border); border-radius: 0.65rem; background: var(--notice); }
 
+/* Theme control (src/ThemeControl.tsx), styled as on the main site. Auto
+   follows the operating system; Light and Dark override it. */
+.theme-control { display: flex; flex-shrink: 0; margin: 0; padding: 3px; border: 1px solid var(--border); border-radius: 0.65rem; background: var(--surface); }
+.theme-option { position: relative; cursor: pointer; }
+.theme-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.theme-option span { display: flex; align-items: center; justify-content: center; min-height: 2rem; min-width: 2.8rem; border-radius: 0.4rem; color: var(--muted); font-size: 0.8125rem; font-weight: 600; }
+.theme-option:hover input:not(:checked) + span { background: var(--hover); }
+.theme-option input:checked + span { background: var(--card); color: var(--accent); box-shadow: 0 1px 4px rgb(0 0 0 / 0.09); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+.theme-option input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 .card { border: 1px solid var(--border); border-radius: 1rem; background: var(--card); }
 .card-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .card-heading h2 { font-size: 1.0625rem; font-weight: 650; }
@@ -119,7 +129,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 
 /* Loading and sign-in. */
 .loading { display: grid; place-items: center; min-height: 100vh; color: var(--faint); }
-.sign-in { display: grid; place-items: center; min-height: 100vh; padding: 1rem; }
+/* The theme control takes the top corner. Equal rows above and below the card
+   keep it centered, and on short screens the card starts below the control. */
+.sign-in { display: grid; grid-template-rows: 1fr auto 1fr; justify-items: center; row-gap: 1rem; min-height: 100vh; padding: 1rem; }
+.sign-in > .theme-control { align-self: start; justify-self: end; }
 .sign-in-card { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; width: min(100%, 27rem); padding: 2rem; }
 .sign-in-card h1 { font-size: 1.75rem; font-weight: 750; letter-spacing: -0.04em; }
 .sign-in-card p { margin: 0; color: var(--muted); }
@@ -252,6 +265,14 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
   .facts { grid-template-columns: minmax(0, 1fr); }
   .dialog-body { padding: 1.1rem; }
   .segmented span { padding-inline: 0.45rem; }
+  .theme-option span { min-width: 2.5rem; }
+}
+
+/* Keep the header on one line on small phones: Sign out shows only its icon
+   and keeps its name for screen readers. */
+@media (max-width: 25rem) {
+  .button.sign-out { width: 2.5rem; padding-inline: 0; }
+  .sign-out span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -260,6 +281,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fo
 
 @media (forced-colors: active) {
   .column, .bar { background: CanvasText; forced-color-adjust: none; }
-  .segmented input:checked + span { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .segmented input:checked + span, .theme-option input:checked + span { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .theme-option input:focus-visible + span { outline: 2px solid Highlight; outline-offset: 2px; }
   .slot.active { outline: 1px solid Highlight; }
 }
