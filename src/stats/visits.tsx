@@ -57,7 +57,7 @@ function searchText(visit: Visit, insight?: VisitInsight) {
   ].join(' ').toLowerCase();
 }
 
-export function VisitsTable({ visits, visitCounts, insights, onOpen }: {
+export function VisitsList({ visits, visitCounts, insights, onOpen }: {
   visits: Visit[];
   visitCounts: Map<string, number>;
   insights: Map<string, VisitInsight>;
@@ -75,7 +75,7 @@ export function VisitsTable({ visits, visitCounts, insights, onOpen }: {
       <div className="card-heading visits-heading">
         <div>
           <h2 id="visits-heading">Visits</h2>
-          <p>{matches.length === visits.length ? `${visits.length} in this view` : `${matches.length} of ${visits.length} match`} · Search filters this table only.</p>
+          <p>{matches.length === visits.length ? `${visits.length} in this view` : `${matches.length} of ${visits.length} match`} · Search filters this list only.</p>
         </div>
         <label className="search" htmlFor={searchId}>
           <Search size={16} aria-hidden="true" />
@@ -95,59 +95,43 @@ export function VisitsTable({ visits, visitCounts, insights, onOpen }: {
       {matches.length === 0 ? (
         <p className="empty">{visits.length ? 'No visits match that search.' : 'No visits match this traffic filter and period.'}</p>
       ) : (
-        <div className="table-scroll" tabIndex={0} role="region" aria-label="Visits; scroll horizontally for more columns">
-          <table className="visits-table">
-            <thead>
-              <tr>
-                <th scope="col">When</th>
-                <th scope="col">Where</th>
-                <th scope="col">IP address</th>
-                <th scope="col">Traffic</th>
-                <th scope="col">Return signal</th>
-                <th scope="col">Browser</th>
-                <th scope="col">Source</th>
-                <th scope="col" className="number">Time</th>
-                <th scope="col" className="number">Clicks</th>
-                <th scope="col">Browser ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {matches.slice(0, shown).map((visit) => {
-                const visitsByVisitor = visitCounts.get(visitorKey(visit)) ?? 1;
-                const insight = insights.get(visit.id);
-                return (
-                  <tr key={visit.id}>
-                    <th scope="row">
-                      <button type="button" className="text-button" onClick={() => onOpen(visit)}>{formatDateTime(visit.start)}</button>
-                    </th>
-                    <td><span className="flag" aria-hidden="true">{flag(visit.location.countryCode)}</span> {shortPlace(visit)}</td>
-                    <td className="ip-address"><code>{visit.ip || 'Unknown'}</code></td>
-                    <td className="traffic-cell">
-                      <span className={`signal signal-${insight?.traffic.kind ?? 'unknown'}`} title={insight?.traffic.reasons.join(' ')}>{insight?.traffic.label ?? 'No automation signal'}</span>
-                      {insight?.traffic.headless && <span className="signal signal-headless">Headless signal</span>}
-                      <span className="cell-note">{visit.js ? 'JavaScript beacon' : 'Pixel request'}</span>
-                    </td>
-                    <td title={insight?.returnReason}>{returnLabel(insight?.returning ?? 'unknown')}</td>
-                    <td>{browserName(visit)} <span className="muted">· {visit.os} · {deviceName(visit)}</span></td>
-                    <td>{source(visit)}</td>
-                    <td className="number">{visit.js ? formatDuration(visit.engagedMs) : <span className="muted">Not measured</span>}</td>
-                    <td className="number">{visit.js ? visit.clicks.length : <span className="muted">Not measured</span>}</td>
-                    <td>
-                      {visit.visitor ? (
-                        <button type="button" className="chip" onClick={() => { setQuery(visit.visitor); setShown(PAGE_SIZE); }} title="Search this stored browser ID">
-                          {visit.visitor.slice(0, 6)}
-                          {visitsByVisitor > 1 && <span> · {visitsByVisitor} visits</span>}
-                        </button>
-                      ) : (
-                        <span className="muted">Not available</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ul className="visits-list" role="list">
+          {matches.slice(0, shown).map((visit) => {
+            const visitsByVisitor = visitCounts.get(visitorKey(visit)) ?? 1;
+            const insight = insights.get(visit.id);
+            return (
+              <li className="visit-entry" key={visit.id}>
+                <dl className="visit-fields">
+                  <Fact term="When">
+                    <button type="button" className="text-button" onClick={() => onOpen(visit)}>{formatDateTime(visit.start)}</button>
+                  </Fact>
+                  <Fact term="Where"><span className="flag" aria-hidden="true">{flag(visit.location.countryCode)}</span> {shortPlace(visit)}</Fact>
+                  <Fact term="IP address"><code>{visit.ip || 'Unknown'}</code></Fact>
+                  <Fact term="Traffic">
+                    <span className={`signal signal-${insight?.traffic.kind ?? 'unknown'}`} title={insight?.traffic.reasons.join(' ')}>{insight?.traffic.label ?? 'No automation signal'}</span>
+                    {insight?.traffic.headless && <span className="signal signal-headless">Headless signal</span>}
+                    <span className="cell-note">{visit.js ? 'JavaScript beacon' : 'Pixel request'}</span>
+                  </Fact>
+                  <Fact term="Return signal"><span title={insight?.returnReason}>{returnLabel(insight?.returning ?? 'unknown')}</span></Fact>
+                  <Fact term="Browser">{browserName(visit)} <span className="muted">· {visit.os} · {deviceName(visit)}</span></Fact>
+                  <Fact term="Source">{source(visit)}</Fact>
+                  <Fact term="Time">{visit.js ? formatDuration(visit.engagedMs) : <span className="muted">Not measured</span>}</Fact>
+                  <Fact term="Clicks">{visit.js ? visit.clicks.length : <span className="muted">Not measured</span>}</Fact>
+                  <Fact term="Browser ID">
+                    {visit.visitor ? (
+                      <button type="button" className="chip" onClick={() => { setQuery(visit.visitor); setShown(PAGE_SIZE); }} title="Search this stored browser ID">
+                        {visit.visitor.slice(0, 6)}
+                        {visitsByVisitor > 1 && <span> · {visitsByVisitor} visits</span>}
+                      </button>
+                    ) : (
+                      <span className="muted">Not available</span>
+                    )}
+                  </Fact>
+                </dl>
+              </li>
+            );
+          })}
+        </ul>
       )}
       {matches.length > shown && (
         <button type="button" className="button button-secondary more" onClick={() => setShown(shown + PAGE_SIZE)}>
