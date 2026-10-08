@@ -47,10 +47,11 @@ How it fits together:
 - `src/analytics/tracker.ts` runs on the public page in production builds and
   sends the visit to `/api/collect` when it starts, when an outbound link is
   clicked, and when the tab is hidden or closed. It skips browsers that send
-  Global Privacy Control or Do Not Track, automated browsers, and any browser
+  Global Privacy Control or Do Not Track, and any browser
   that has signed in to the dashboard.
-- Visitors with JavaScript disabled are counted by the `<noscript>` image in
-  `index.html`.
+- Requests for the `<noscript>` image in `index.html` are counted as pixel
+  requests. These include browsers with JavaScript disabled, but crawlers can
+  fetch the same URL directly.
 - `netlify/functions/` holds the server side: `collect` adds the IP address,
   location, and parsed browser to each visit; `auth` handles GitHub sign-in;
   `stats` serves the data to the signed-in owner; `compact` runs daily. Visits
@@ -101,6 +102,49 @@ Netlify project can't reach.
 data, because the Vite dev server doesn't run Netlify Functions. Use
 `netlify dev` from the Netlify CLI to run the functions and a local Blobs store
 together. `npm run typecheck` checks the functions as well as the site.
+Run `npm test` for traffic classification, return detection, request collection,
+and tracker storage/opt-out regressions; it uses Node's built-in test runner.
+
+### Understanding traffic and return visits
+
+The dashboard shows IP addresses in the visits table and provides traffic
+filters for every summary, chart, and list. Open a visit to see the evidence
+behind its labels and the request headers captured with it.
+
+- **High-confidence automation** means an explicit known crawler/tool user
+  agent, a headless browser identifier, or `navigator.webdriver = true` was
+  recorded. **Possible automation** uses weaker clues such as an absent user
+  agent or an unusual pixel fetch destination. No JavaScript, short visits,
+  missing language headers, or zero clicks alone are not bot evidence.
+- These are explainable rules, not calibrated probabilities: the site cannot
+  establish a 99% bot likelihood. Headers and browser reports can be spoofed;
+  crawler operators are not verified. “No automation signal” does not prove
+  that a person visited, and WebDriver does not by itself prove headless mode.
+- Pixel requests still reveal server time, IP, approximate IP location,
+  claimed browser/OS/device, language preferences, and any available fetch
+  metadata or client hints. Their request referrer describes the page asking
+  for the image, not the original source of the visit. Referrer policies may
+  reduce it to an origin or omit it. Time, scroll, screen size, and clicks are
+  not measured for these requests, and a direct pixel fetch is not proof that
+  the page was opened. Requests that never reach the collector remain unseen.
+- **Returning** uses an earlier visit with the same saved browser ID, or a
+  browser storage marker remembering a prior visit outside the selected
+  period. Reloads within a visit keep its original status. “First observed”
+  is not a lifetime-first visit: another browser or cleared storage starts
+  over. Counts are of identified browsers, not people. With no browser ID,
+  an earlier matching IP and user agent is only a **possible repeat**, since
+  shared networks, proxies, and bots can produce the same match.
+
+New evidence is optional so historical records continue to work. Older
+visits can be classified from their saved user agents and compared within
+the selected period, but missing headers and previously discarded bot
+requests cannot be recovered. Capturing a bounded allowlist of headers avoids
+storing cookies or authorization headers; IPs and evidence remain behind the
+dashboard's existing owner sign-in. Privacy and owner opt-outs still apply.
+
+References: [WebDriver's automation signal](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/webdriver),
+[fetch destinations](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Dest),
+and [verifying a crawler's operator](https://developers.google.com/crawling/docs/crawlers-fetchers/verify-google-requests).
 
 ## Readability
 

@@ -1,13 +1,13 @@
 import type { Config, Context } from '@netlify/functions';
 import { REMOTE_HOSTS } from '../../src/analytics/origin';
-import { LIMITS, UTM_KEYS, type Beacon, type LinkClick, type PageView, type Utm, type Visit } from '../../src/analytics/types';
+import { LIMITS, UTM_KEYS, type Beacon, type LinkClick, type PageView, type RequestEvidence, type Utm, type Visit } from '../../src/analytics/types';
 import { readSession } from '../lib/session';
-import { isBot, parseUserAgent } from '../lib/useragent';
+import { parseUserAgent } from '../lib/useragent';
 import { visitKey, visitStore } from '../lib/visits';
 
 // Records visits for the private stats page. POST takes the tracker's beacons
-// (src/analytics/tracker.ts); GET is the <noscript> image in index.html, which
-// counts visitors browsing with JavaScript disabled.
+// (src/analytics/tracker.ts); GET records requests for the <noscript> image.
+// A crawler can request that image too, so GET does not prove JS is disabled.
 
 export const config: Config = {
   path: '/api/collect',
@@ -29,6 +29,30 @@ const count = (value: unknown, max: number) =>
 const records = (value: unknown, max: number) =>
   (Array.isArray(value) ? value : []).filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null).slice(0, max);
 
+/** Only bounded, useful request context; never cookies or authorization. */
+function requestEvidence(req: Request): RequestEvidence {
+  const evidence: RequestEvidence = {};
+  const headers: [keyof RequestEvidence, string, number][] = [
+    ['accept', 'accept', 500],
+    ['acceptLanguage', 'accept-language', 300],
+    ['referer', 'referer', 500],
+    ['fetchDest', 'sec-fetch-dest', 40],
+    ['fetchMode', 'sec-fetch-mode', 40],
+    ['fetchSite', 'sec-fetch-site', 40],
+    ['fetchUser', 'sec-fetch-user', 10],
+    ['clientUa', 'sec-ch-ua', 500],
+    ['clientPlatform', 'sec-ch-ua-platform', 80],
+    ['clientMobile', 'sec-ch-ua-mobile', 10],
+  ];
+  for (const [key, header, max] of headers) {
+    const value = req.headers.get(header);
+    if (value) evidence[key] = text(value, max);
+  }
+  const purpose = req.headers.get('sec-purpose') ?? req.headers.get('purpose');
+  if (purpose) evidence.purpose = text(purpose, 120);
+  return evidence;
+}
+
 /** Validates a beacon and returns it with the time its id encodes. */
 function parseBeacon(body: unknown, now: number): { beacon: Beacon; startedAt: number } | null {
   if (typeof body !== 'object' || body === null) return null;
@@ -39,6 +63,9 @@ function parseBeacon(body: unknown, now: number): { beacon: Beacon; startedAt: n
   if (Math.abs(now - startedAt) > LIMITS.visitMs) return null;
 
   const visitor = text(raw.visitor, 40);
+  const rawAutomation = typeof raw.automation === 'object' && raw.automation !== null
+    ? raw.automation as Record<string, unknown>
+    : {};
   const utm: Utm = {};
   const rawUtm = typeof raw.utm === 'object' && raw.utm !== null ? (raw.utm as Record<string, unknown>) : {};
   for (const key of UTM_KEYS) if (typeof rawUtm[key] === 'string') utm[key] = text(rawUtm[key]);
@@ -61,6 +88,8 @@ function parseBeacon(body: unknown, now: number): { beacon: Beacon; startedAt: n
       v: 1,
       id: raw.id as string,
       visitor: /^[0-9a-z]*$/.test(visitor) ? visitor : '',
+      ...(typeof raw.returning === 'boolean' ? { returning: raw.returning } : {}),
+      ...(typeof rawAutomation.webdriver === 'boolean' ? { automation: { webdriver: rawAutomation.webdriver } } : {}),
       seq: count(raw.seq, 1_000_000),
       referrer: text(raw.referrer),
       utm,
@@ -100,6 +129,7 @@ function newVisit(id: string, req: Request, context: Context, now: number): Visi
     },
     ...parseUserAgent(userAgent),
     userAgent: userAgent.slice(0, 500),
+    request: requestEvidence(req),
     referrer: '',
     utm: {},
     language: '',
@@ -145,6 +175,9 @@ async function recordBeacon(req: Request, context: Context, now: number) {
     const visit: Visit = {
       ...base,
       visitor: base.visitor || beacon.visitor,
+      returning: base.returning ?? beacon.returning,
+      // Once automation was observed, a later snapshot cannot erase it.
+      automation: base.automation?.webdriver === true ? base.automation : beacon.automation ?? base.automation,
       seq: beacon.seq,
       end: now,
       referrer: beacon.referrer,
@@ -169,24 +202,27 @@ async function recordBeacon(req: Request, context: Context, now: number) {
 async function recordNoScript(req: Request, context: Context, now: number) {
   const id = `${now.toString(36)}-${Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(36).padStart(2, '0')).join('')}`;
   const visit = newVisit(id, req, context, now);
-  let path = '/';
   try {
-    path = new URL(req.headers.get('referer') ?? '').pathname;
+    const referer = new URL(req.headers.get('referer') ?? '');
+    if (referer.origin === new URL(req.url).origin || REPORTING_ORIGINS.includes(referer.origin)) {
+      visit.pages = [{ path: text(referer.pathname), title: '', at: 0 }];
+    }
   } catch {
-    // Browsers may withhold the referrer; the site has one page anyway.
+    // Browsers and direct requests may provide no referring page.
   }
+  // This header describes the page requesting the image, not its referral.
+  // The original request context is available separately in visit.request.
   visit.js = false;
   visit.seq = 1;
   visit.language = text(req.headers.get('accept-language')?.split(',')[0], 40);
-  visit.pages = [{ path, title: '', at: 0 }];
   await visitStore().setJSON(visitKey(id, now), visit, { onlyIfNew: true });
 }
 
 export default async (req: Request, context: Context) => {
   const now = Date.now();
   const optedOut = req.headers.get('sec-gpc') === '1' || req.headers.get('dnt') === '1';
-  // Skip crawlers, visitors asking not to be tracked, and the signed-in owner.
-  const skip = optedOut || isBot(req.headers.get('user-agent') ?? '') || (await readSession(req)) !== null;
+  // Keep automation as evidence, while respecting privacy and owner opt-outs.
+  const skip = optedOut || (await readSession(req)) !== null;
 
   if (req.method === 'GET') {
     if (!skip) await recordNoScript(req, context, now);
