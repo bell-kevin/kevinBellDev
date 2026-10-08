@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ExternalLink, Search, X } from 'lucide-react';
 import type { Visit } from '../analytics/types';
+import type { VisitInsight } from './signals';
 import {
   browserName,
   deviceName,
@@ -11,14 +12,28 @@ import {
   formatOffset,
   languageName,
   place,
+  returnLabel,
   shortPlace,
   source,
   visitorKey,
 } from './format';
 
 const PAGE_SIZE = 50;
+const REQUEST_HEADERS: [keyof NonNullable<Visit['request']>, string][] = [
+  ['accept', 'Accept'],
+  ['acceptLanguage', 'Accept-Language'],
+  ['referer', 'Referer (requesting page)'],
+  ['fetchDest', 'Sec-Fetch-Dest'],
+  ['fetchMode', 'Sec-Fetch-Mode'],
+  ['fetchSite', 'Sec-Fetch-Site'],
+  ['fetchUser', 'Sec-Fetch-User'],
+  ['clientUa', 'Sec-CH-UA'],
+  ['clientPlatform', 'Sec-CH-UA-Platform'],
+  ['clientMobile', 'Sec-CH-UA-Mobile'],
+  ['purpose', 'Request purpose'],
+];
 
-function searchText(visit: Visit) {
+function searchText(visit: Visit, insight?: VisitInsight) {
   return [
     place(visit),
     visit.location.countryCode,
@@ -30,21 +45,28 @@ function searchText(visit: Visit) {
     source(visit),
     visit.referrer,
     visit.visitor,
+    visit.userAgent,
+    visit.js ? 'JavaScript beacon' : 'Pixel request',
+    insight?.traffic.label,
+    insight?.traffic.headless ? 'Headless' : '',
+    insight && returnLabel(insight.returning),
+    ...(insight?.traffic.reasons ?? []),
     languageName(visit.language),
     ...Object.values(visit.utm),
     ...visit.clicks.map((click) => `${click.label} ${click.href}`),
   ].join(' ').toLowerCase();
 }
 
-export function VisitsTable({ visits, visitCounts, onOpen }: {
+export function VisitsTable({ visits, visitCounts, insights, onOpen }: {
   visits: Visit[];
   visitCounts: Map<string, number>;
+  insights: Map<string, VisitInsight>;
   onOpen: (visit: Visit) => void;
 }) {
   const [query, setQuery] = useState('');
   const [shown, setShown] = useState(PAGE_SIZE);
   const searchId = useId();
-  const index = useMemo(() => visits.map((visit) => [visit, searchText(visit)] as const), [visits]);
+  const index = useMemo(() => visits.map((visit) => [visit, searchText(visit, insights.get(visit.id))] as const), [visits, insights]);
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   const matches = terms.length ? index.filter(([, text]) => terms.every((term) => text.includes(term))).map(([visit]) => visit) : visits;
 
@@ -53,7 +75,7 @@ export function VisitsTable({ visits, visitCounts, onOpen }: {
       <div className="card-heading visits-heading">
         <div>
           <h2 id="visits-heading">Visits</h2>
-          <p>{matches.length === visits.length ? `${visits.length} in this period` : `${matches.length} of ${visits.length} match`}</p>
+          <p>{matches.length === visits.length ? `${visits.length} in this view` : `${matches.length} of ${visits.length} match`} · Search filters this table only.</p>
         </div>
         <label className="search" htmlFor={searchId}>
           <Search size={16} aria-hidden="true" />
@@ -61,7 +83,7 @@ export function VisitsTable({ visits, visitCounts, onOpen }: {
           <input
             id={searchId}
             type="search"
-            placeholder="Place, IP, browser, source, visitor…"
+            placeholder="Place, IP, browser, traffic signal…"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -71,42 +93,53 @@ export function VisitsTable({ visits, visitCounts, onOpen }: {
         </label>
       </div>
       {matches.length === 0 ? (
-        <p className="empty">{visits.length ? 'No visits match that search.' : 'No visits in this period yet.'}</p>
+        <p className="empty">{visits.length ? 'No visits match that search.' : 'No visits match this traffic filter and period.'}</p>
       ) : (
-        <div className="table-scroll">
+        <div className="table-scroll" tabIndex={0} role="region" aria-label="Visits; scroll horizontally for more columns">
           <table className="visits-table">
             <thead>
               <tr>
                 <th scope="col">When</th>
                 <th scope="col">Where</th>
+                <th scope="col">IP address</th>
+                <th scope="col">Traffic</th>
+                <th scope="col">Return signal</th>
                 <th scope="col">Browser</th>
                 <th scope="col">Source</th>
                 <th scope="col" className="number">Time</th>
                 <th scope="col" className="number">Clicks</th>
-                <th scope="col">Visitor</th>
+                <th scope="col">Browser ID</th>
               </tr>
             </thead>
             <tbody>
               {matches.slice(0, shown).map((visit) => {
                 const visitsByVisitor = visitCounts.get(visitorKey(visit)) ?? 1;
+                const insight = insights.get(visit.id);
                 return (
                   <tr key={visit.id}>
                     <th scope="row">
                       <button type="button" className="text-button" onClick={() => onOpen(visit)}>{formatDateTime(visit.start)}</button>
                     </th>
                     <td><span className="flag" aria-hidden="true">{flag(visit.location.countryCode)}</span> {shortPlace(visit)}</td>
+                    <td className="ip-address"><code>{visit.ip || 'Unknown'}</code></td>
+                    <td className="traffic-cell">
+                      <span className={`signal signal-${insight?.traffic.kind ?? 'unknown'}`} title={insight?.traffic.reasons.join(' ')}>{insight?.traffic.label ?? 'No automation signal'}</span>
+                      {insight?.traffic.headless && <span className="signal signal-headless">Headless signal</span>}
+                      <span className="cell-note">{visit.js ? 'JavaScript beacon' : 'Pixel request'}</span>
+                    </td>
+                    <td title={insight?.returnReason}>{returnLabel(insight?.returning ?? 'unknown')}</td>
                     <td>{browserName(visit)} <span className="muted">· {visit.os} · {deviceName(visit)}</span></td>
                     <td>{source(visit)}</td>
-                    <td className="number">{visit.js ? formatDuration(visit.engagedMs) : '—'}</td>
-                    <td className="number">{visit.clicks.length}</td>
+                    <td className="number">{visit.js ? formatDuration(visit.engagedMs) : <span className="muted">Not measured</span>}</td>
+                    <td className="number">{visit.js ? visit.clicks.length : <span className="muted">Not measured</span>}</td>
                     <td>
                       {visit.visitor ? (
-                        <button type="button" className="chip" onClick={() => { setQuery(visit.visitor); setShown(PAGE_SIZE); }} title="Show only this visitor">
+                        <button type="button" className="chip" onClick={() => { setQuery(visit.visitor); setShown(PAGE_SIZE); }} title="Search this stored browser ID">
                           {visit.visitor.slice(0, 6)}
                           {visitsByVisitor > 1 && <span> · {visitsByVisitor} visits</span>}
                         </button>
                       ) : (
-                        <span className="muted">{visit.js ? '—' : 'No JavaScript'}</span>
+                        <span className="muted">Not available</span>
                       )}
                     </td>
                   </tr>
@@ -142,9 +175,10 @@ function Outbound({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-export function VisitDialog({ visit, related, onOpen, onClose }: {
+export function VisitDialog({ visit, related, insight, onOpen, onClose }: {
   visit: Visit | null;
   related: Visit[];
+  insight?: VisitInsight;
   onOpen: (visit: Visit) => void;
   onClose: () => void;
 }) {
@@ -182,13 +216,26 @@ export function VisitDialog({ visit, related, onOpen, onClose }: {
         <div className="dialog-body">
           <div className="dialog-header">
             <div>
-              <p className="eyebrow">{visit.js ? 'Visit' : 'Visit without JavaScript'}</p>
+              <p className="eyebrow">{visit.js ? 'JavaScript visit' : 'Pixel request'}</p>
               <h2 id="visit-title">{formatLongDateTime(visit.start)}</h2>
             </div>
             <button type="button" className="icon-button" onClick={() => dialog.current?.close()} aria-label="Close">
               <X size={20} aria-hidden="true" />
             </button>
           </div>
+
+          <div className="visit-signals">
+            <h3>Traffic assessment</h3>
+            <p><span className={`signal signal-${insight?.traffic.kind ?? 'unknown'}`}>{insight?.traffic.label ?? 'No automation signal'}</span></p>
+            {insight?.traffic.reasons.length ? <ul className="signal-reasons">{insight.traffic.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p className="measurement-note">No affirmative automation evidence was recorded. This does not establish that a person visited.</p>}
+            <p className="measurement-note">User agents and browser reports can be spoofed. These are evidence-based labels, not calibrated probabilities or verified crawler identities.</p>
+            <dl className="facts">
+              <Fact term="Headless browser">{insight?.traffic.headless ? 'Headless signal detected' : 'Unknown — no affirmative headless signal'}</Fact>
+              <Fact term="Return signal">{returnLabel(insight?.returning ?? 'unknown')}<div className="muted">{insight?.returnReason ?? 'No return information recorded.'}</div></Fact>
+            </dl>
+          </div>
+
+          {!visit.js && <p className="notice">The tracking pixel was requested. This may be a browser with JavaScript disabled, a crawler, or a direct request. Time, scroll depth, clicks, screen size, and a stored browser ID are not measured by the pixel.</p>}
 
           <dl className="facts">
             <Fact term="Location">
@@ -205,12 +252,12 @@ export function VisitDialog({ visit, related, onOpen, onClose }: {
               <code>{visit.ip || 'Unknown'}</code>
               {visit.ip && <div><Outbound href={`https://ipinfo.io/${encodeURIComponent(visit.ip)}`}>Who owns this address</Outbound></div>}
             </Fact>
-            <Fact term="Time on page">
+            <Fact term="Recorded time on page">
               {visit.js ? `${formatDuration(visit.engagedMs)} visible` : 'Not measured'}
               {visit.js && <span className="muted"> · scrolled {visit.maxScroll}%</span>}
               {visit.end > visit.start && <div className="muted">Last heard from at {formatDateTime(visit.end)}</div>}
             </Fact>
-            <Fact term="Came from">
+            <Fact term="Referral source">
               {visit.referrer ? <span className="break">{visit.referrer}</span> : source(visit)}
               {utm.map(([key, value]) => <div key={key} className="muted">utm_{key}: {value}</div>)}
             </Fact>
@@ -220,7 +267,7 @@ export function VisitDialog({ visit, related, onOpen, onClose }: {
               {visit.screen && <span className="muted"> · screen {visit.screen}</span>}
               {visit.viewport && <span className="muted"> · window {visit.viewport}</span>}
             </Fact>
-            <Fact term="Language">{languageName(visit.language)} {visit.language && <span className="muted">({visit.language})</span>}</Fact>
+            <Fact term={visit.js ? 'Reported language' : 'Preferred request language'}>{languageName(visit.language)} {visit.language && <span className="muted">({visit.language})</span>}</Fact>
             <Fact term="Time zone">
               {visit.timeZone || visit.location.timezone || 'Unknown'}
               {visit.timeZone && visit.location.timezone && visit.timeZone !== visit.location.timezone && (
@@ -229,28 +276,29 @@ export function VisitDialog({ visit, related, onOpen, onClose }: {
             </Fact>
           </dl>
 
-          <h3>What they did</h3>
+          <h3>Recorded activity</h3>
+          {visit.js && <p className="measurement-note">Time and clicks reflect received JavaScript updates. Missing updates can leave the recorded activity incomplete.</p>}
           {events.length ? (
             <ol className="timeline">
               {events.map((event, index) => (
                 <li key={index} className={event.kind}>
                   <span className="offset">{formatOffset(event.at)}</span>
                   <span>
-                    <strong>{event.kind === 'page' ? `Opened ${event.text}` : `Clicked “${event.text}”`}</strong>
+                    <strong>{event.kind === 'page' ? `${visit.js ? 'Opened' : 'Pixel requested for'} ${event.text}` : `Clicked “${event.text}”`}</strong>
                     <small className="break">{event.detail}</small>
                   </span>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className="muted">Nothing recorded beyond the page load.</p>
+            <p className="muted">Nothing recorded beyond the request.</p>
           )}
 
-          <h3>Visitor</h3>
+          <h3>Browser identity</h3>
           {visit.visitor ? (
             <>
               <p className="muted">
-                Browser id <code>{visit.visitor}</code>, kept in the visitor's local storage. {related.length > 1 ? `${related.length} visits in this period:` : 'No other visits in this period.'}
+                Stored browser ID <code>{visit.visitor}</code>. It identifies a browser profile, not a person, and can change when storage is cleared or unavailable. {related.length > 1 ? `${related.length} visits in this period:` : 'No other visits with this ID in this period.'}
               </p>
               {related.length > 1 && (
                 <ul className="related">
@@ -261,18 +309,26 @@ export function VisitDialog({ visit, related, onOpen, onClose }: {
                       ) : (
                         <button type="button" className="text-button" onClick={() => onOpen(other)}>{formatDateTime(other.start)}</button>
                       )}
-                      <span className="muted"> · {formatDuration(other.engagedMs)} · {other.clicks.length} clicks</span>
+                      <span className="muted"> · {other.js ? `${formatDuration(other.engagedMs)} · ${other.clicks.length} recorded clicks` : 'Pixel; activity not measured'}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </>
           ) : (
-            <p className="muted">Browsers without JavaScript can't be told apart between visits.</p>
+            <p className="muted">No stored browser ID was recorded. A matching IP address and user agent can suggest a repeat request, but shared networks, proxies, and browser defaults mean it cannot establish the same browser or person.</p>
           )}
 
           <h3>User agent</h3>
           <p><code className="break">{visit.userAgent || 'None sent'}</code></p>
+
+          <h3>Request evidence</h3>
+          <p className="measurement-note">Selected request headers, stored with length limits. Missing values are unknown; older visits may have no saved headers. A pixel’s Referer usually identifies the page containing the pixel, not how the visitor originally found the site.</p>
+          {visit.request && Object.values(visit.request).some(Boolean) ? (
+            <dl className="facts request-facts">
+              {REQUEST_HEADERS.map(([key, label]) => visit.request?.[key] ? <Fact key={key} term={label}><code>{visit.request[key]}</code></Fact> : null)}
+            </dl>
+          ) : <p className="muted">No request headers recorded.</p>}
         </div>
       )}
     </dialog>

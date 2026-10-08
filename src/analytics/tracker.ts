@@ -3,6 +3,7 @@ import { LIMITS, OWNER_KEY, UTM_KEYS, type Beacon, type LinkClick, type PageView
 
 const VISIT_KEY = 'kevinbell-visit';
 const VISITOR_KEY = 'kevinbell-visitor';
+const LAST_VISIT_KEY = 'kevinbell-last-visit';
 /** Coming back after this long hidden starts a new visit. */
 const IDLE_MS = 30 * 60 * 1000;
 /** A tab left open counts at most this long per stretch of being visible. */
@@ -21,6 +22,12 @@ interface VisitState {
   clicks: LinkClick[];
   engagedMs: number;
   maxScroll: number;
+  returning?: boolean;
+}
+
+interface BrowserIdentity {
+  id: string;
+  previouslyStored: boolean;
 }
 
 function storageGet(storage: () => Storage, key: string) {
@@ -52,25 +59,43 @@ function randomId(bytes: number) {
  */
 function claimOwner() {
   const url = new URL(location.href);
-  if (url.searchParams.get('stats-owner') !== '1') return;
+  if (url.searchParams.get('stats-owner') !== '1') return false;
   storageSet(local, OWNER_KEY, '1');
   url.searchParams.delete('stats-owner');
   history.replaceState(history.state, '', url);
+  return true;
 }
 
 function trackingAllowed() {
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
-  if (nav.globalPrivacyControl || nav.doNotTrack === '1' || nav.webdriver) return false;
+  if (nav.globalPrivacyControl || nav.doNotTrack === '1') return false;
   return storageGet(local, OWNER_KEY) === null;
 }
 
-function visitorId() {
-  let id = storageGet(local, VISITOR_KEY);
-  if (!id || !/^[0-9a-z]{16,40}$/.test(id)) {
-    id = randomId(10);
-    storageSet(local, VISITOR_KEY, id);
+function visitorId(): BrowserIdentity {
+  const saved = storageGet(local, VISITOR_KEY);
+  if (saved && /^[0-9a-z]{16,40}$/.test(saved)) return { id: saved, previouslyStored: true };
+  const id = randomId(10);
+  storageSet(local, VISITOR_KEY, id);
+  return { id: storageGet(local, VISITOR_KEY) === id ? id : '', previouslyStored: false };
+}
+
+/** Remember only the latest visit, so history need not be fetched or stored. */
+function markVisit(id: string, identity: BrowserIdentity): boolean | undefined {
+  if (!identity.id) return undefined;
+  try {
+    const storage = local();
+    if (storage.getItem(VISITOR_KEY) !== identity.id) return undefined;
+    const previous = storage.getItem(LAST_VISIT_KEY);
+    storage.setItem(LAST_VISIT_KEY, id);
+    if (storage.getItem(LAST_VISIT_KEY) !== id) return undefined;
+    if (previous) return /^[0-9a-z]{6,10}-[0-9a-z]{8,40}$/.test(previous) ? previous !== id : undefined;
+    // An existing visitor id predates this marker, so its history is unknown.
+    return identity.previouslyStored ? undefined : false;
+  } catch {
+    // Blocked storage cannot establish whether this browser has visited before.
+    return undefined;
   }
-  return id;
 }
 
 function externalReferrer() {
@@ -92,9 +117,11 @@ function currentUtm() {
   return utm;
 }
 
-function newVisit(now: number): VisitState {
+function newVisit(now: number, identity: BrowserIdentity): VisitState {
+  const id = `${now.toString(36)}-${randomId(8)}`;
   return {
-    id: `${now.toString(36)}-${randomId(8)}`,
+    id,
+    returning: markVisit(id, identity),
     seq: 0,
     startedAt: now,
     hiddenAt: null,
@@ -143,14 +170,19 @@ function scrollDepth() {
 }
 
 export function startTracking() {
-  claimOwner();
-  if (!trackingAllowed()) return;
+  const ownerClaimed = claimOwner();
+  // The explicit opt-out applies now even when storage cannot remember it.
+  if (ownerClaimed || !trackingAllowed()) return;
 
   const endpoint = `${statsOrigin()}/api/collect`;
-  const visitor = visitorId();
+  let identity = visitorId();
   const now = Date.now();
   // A saved visit carries on across page loads in the same tab.
-  let visit = savedVisit(now) ?? newVisit(now);
+  const saved = savedVisit(now);
+  let visit = saved ?? newVisit(now, identity);
+  // Preserve the saved visit's original status, including an unknown legacy
+  // status. Recording its marker still lets the next visit be recognized.
+  if (saved) markVisit(saved.id, identity);
   visit.hiddenAt = null;
   let visibleSince: number | null = document.visibilityState === 'visible' ? now : null;
   let dirty = false;
@@ -167,12 +199,16 @@ export function startTracking() {
   };
 
   const send = () => {
+    // Another tab may have set the owner opt-out since this one was opened.
+    if (!trackingAllowed()) return;
     const at = Date.now();
     visit.seq += 1;
     const beacon: Beacon = {
       v: 1,
       id: visit.id,
-      visitor,
+      visitor: identity.id,
+      ...(typeof visit.returning === 'boolean' ? { returning: visit.returning } : {}),
+      ...(typeof navigator.webdriver === 'boolean' ? { automation: { webdriver: navigator.webdriver } } : {}),
       seq: visit.seq,
       referrer: visit.referrer,
       utm: visit.utm,
@@ -213,11 +249,14 @@ export function startTracking() {
   };
 
   const show = () => {
+    if (!trackingAllowed()) return;
     const at = Date.now();
     const idle = visit.hiddenAt !== null && at - visit.hiddenAt > IDLE_MS;
     if (idle || at - visit.startedAt > MAX_VISIT_MS) {
       // Coming back to a tab left open is a new visit, not a new referral.
-      visit = { ...newVisit(at), referrer: '', utm: {} };
+      // Storage may have been cleared or blocked while this tab was hidden.
+      identity = visitorId();
+      visit = { ...newVisit(at, identity), referrer: '', utm: {} };
       recordPage();
       dirty = true;
     }

@@ -5,8 +5,9 @@ import { OWNER_KEY, type StatsResponse, type Visit } from '../analytics/types';
 import ThemeControl from '../ThemeControl';
 import { RANGES, breakdowns, hoursOfDay, rangeBounds, summarize, timeline, type AtlasState, type Range } from './aggregate';
 import { BarList, ColumnChart } from './charts';
-import { formatCompact, formatDuration, formatPercent, visitorKey } from './format';
+import { formatCompact, formatDuration, visitorKey } from './format';
 import type { Atlas } from './geo';
+import { visitInsights } from './signals';
 import { UsMap } from './usmap';
 import { VisitDialog, VisitsTable } from './visits';
 
@@ -23,6 +24,17 @@ const SIGN_IN_ERRORS: Record<string, string> = {
   github: 'GitHub didn’t confirm the sign-in. Please try again.',
   forbidden: 'That GitHub account can’t view these statistics.',
 };
+
+const TRAFFIC_FILTERS = [
+  { id: 'all', label: 'All visits' },
+  { id: 'automated', label: 'High-confidence automation' },
+  { id: 'possible', label: 'Possible automation' },
+  { id: 'unknown', label: 'No automation signal' },
+  { id: 'headless', label: 'Headless signals' },
+  { id: 'pixel', label: 'Pixel requests' },
+  { id: 'returning', label: 'Return visits' },
+] as const;
+type TrafficFilter = typeof TRAFFIC_FILTERS[number]['id'];
 
 function initialRange() {
   const id = new URLSearchParams(location.search).get('range');
@@ -112,18 +124,31 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
   onRefresh: () => void;
 }) {
   const [selected, setSelected] = useState<Visit | null>(null);
+  const [trafficFilter, setTrafficFilter] = useState<TrafficFilter>('all');
   const atlas = useAtlas();
   const { visits } = data;
-  const summary = useMemo(() => summarize(visits), [visits]);
-  const lists = useMemo(() => breakdowns(visits, atlas), [visits, atlas]);
-  const buckets = useMemo(() => timeline(visits, range, data.from, data.to), [visits, range, data.from, data.to]);
-  const hours = useMemo(() => hoursOfDay(visits), [visits]);
+  // Compare visits before applying filters, so filtering never changes whether
+  // a browser had already visited earlier in the loaded period.
+  const insights = useMemo(() => visitInsights(visits), [visits]);
+  const filteredGroups = useMemo(() => Object.fromEntries(TRAFFIC_FILTERS.map(({ id }) => [id, visits.filter((visit) => {
+    const insight = insights.get(visit.id)!;
+    if (id === 'all') return true;
+    if (id === 'pixel') return !visit.js;
+    if (id === 'headless') return insight.traffic.headless;
+    if (id === 'returning') return insight.returning === 'returning';
+    return insight.traffic.kind === id;
+  })])) as Record<TrafficFilter, Visit[]>, [visits, insights]);
+  const filteredVisits = filteredGroups[trafficFilter];
+  const summary = useMemo(() => summarize(filteredVisits, insights), [filteredVisits, insights]);
+  const lists = useMemo(() => breakdowns(filteredVisits, atlas, insights), [filteredVisits, atlas, insights]);
+  const buckets = useMemo(() => timeline(filteredVisits, range, data.from, data.to), [filteredVisits, range, data.from, data.to]);
+  const hours = useMemo(() => hoursOfDay(filteredVisits), [filteredVisits]);
   const visitCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const visit of visits) counts.set(visitorKey(visit), (counts.get(visitorKey(visit)) ?? 0) + 1);
     return counts;
   }, [visits]);
-  const related = selected ? visits.filter((visit) => visitorKey(visit) === visitorKey(selected)) : [];
+  const related = selected?.visitor ? visits.filter((visit) => visit.visitor === selected.visitor) : [];
   const perUnit = { hour: 'hour', day: 'day', week: 'week' }[range.unit];
 
   return (
@@ -163,11 +188,29 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
         </div>
 
         <h1 className="sr-only">Site statistics, {range.label.toLowerCase()}</h1>
+        <section className="card traffic-card" aria-labelledby="traffic-heading">
+          <div className="card-heading">
+            <h2 id="traffic-heading">Traffic signals</h2>
+            <span>Counts across this period</span>
+          </div>
+          <fieldset className="traffic-filters">
+            <legend className="sr-only">Filter all statistics by traffic</legend>
+            {TRAFFIC_FILTERS.map((option) => (
+              <label key={option.id}>
+                <input type="radio" name="traffic" checked={option.id === trafficFilter} onChange={() => setTrafficFilter(option.id)} />
+                <span>{option.label} <strong>{formatCompact(filteredGroups[option.id].length)}</strong></span>
+              </label>
+            ))}
+          </fieldset>
+          <p className="measurement-note">Labels describe observed signals, not a measured bot probability. “No automation signal” may include people or automation. A pixel request can come from a browser without JavaScript or a crawler; it does not prove JavaScript was disabled.</p>
+          <p className="filter-status" role="status">Showing {filteredVisits.length} of {visits.length} visits in all summaries, charts, and lists below.</p>
+        </section>
         <dl className="stats-row">
-          <StatTile label="Visits" value={formatCompact(summary.visits)} note={summary.withoutJs ? `${summary.withoutJs} without JavaScript` : undefined} />
-          <StatTile label="Visitors" value={formatCompact(summary.visitors)} note={`${summary.returningVisitors} came back (${formatPercent(summary.returningVisitors, summary.visitors)})`} />
-          <StatTile label="Average time on page" value={formatDuration(summary.averageEngagedMs)} note="while the tab was visible" />
-          <StatTile label="Link clicks" value={formatCompact(summary.clicks)} />
+          <StatTile label="Visits / requests" value={formatCompact(summary.visits)} note={`${summary.withoutJs} pixel requests`} />
+          <StatTile label="Identified browsers" value={formatCompact(summary.visitors)} note={`${summary.unidentifiedVisits} visits without a browser ID`} />
+          <StatTile label="Returning browsers" value={formatCompact(summary.returningVisitors)} note="same stored browser ID; not a person count" />
+          <StatTile label="Average recorded time" value={summary.measuredVisits ? formatDuration(summary.averageEngagedMs) : '—'} note={`${summary.measuredVisits} JavaScript visits; visible tab time`} />
+          <StatTile label="Recorded link clicks" value={summary.measuredVisits ? formatCompact(summary.clicks) : '—'} note="Not measured for pixel requests" />
           <StatTile label="Countries" value={formatCompact(summary.countries)} />
         </dl>
 
@@ -189,17 +232,17 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
           </section>
         )}
 
-        <UsMap atlas={atlas} visits={visits} />
+        <UsMap atlas={atlas} visits={filteredVisits} />
 
         <div className="breakdowns">
           {lists.map((breakdown) => <BarList key={breakdown.id} breakdown={breakdown} />)}
         </div>
 
-        <VisitsTable visits={visits} visitCounts={visitCounts} onOpen={setSelected} />
-        <VisitDialog visit={selected} related={related} onOpen={setSelected} onClose={() => setSelected(null)} />
+        <VisitsTable key={`${range.id}-${trafficFilter}`} visits={filteredVisits} visitCounts={visitCounts} insights={insights} onOpen={setSelected} />
+        <VisitDialog visit={selected} related={related} insight={selected ? insights.get(selected.id) : undefined} onOpen={setSelected} onClose={() => setSelected(null)} />
 
         <p className="footnote">
-          Your own visits aren’t counted while you’re signed in, or ever from this browser. Visitors who send Global Privacy Control or Do Not Track aren’t counted. Locations are approximate, from each visitor’s IP address.
+          Your own visits aren’t counted while you’re signed in, or ever from this browser. Visitors who send Global Privacy Control or Do Not Track aren’t counted. Locations are approximate, from each visitor’s IP address. Return visits use a stored browser ID when available; shared IP addresses do not identify a person. Missing or blocked requests and incomplete JavaScript updates can leave gaps in these statistics.
           {STATS_ORIGIN && location.origin === STATS_ORIGIN && (
             <>
               {' '}To stop counting this browser on kevinbell.dev too,{' '}

@@ -1,7 +1,5 @@
 import type { DeviceType } from '../../src/analytics/types';
 
-const BOT = /bot\b|bot\/|crawl|spider|slurp|archiver|facebookexternalhit|embedly|preview|headless|lighthouse|pingdom|uptime|monitor|curl\/|wget\/|python-|httpx|aiohttp|okhttp|go-http|java\/|axios|node-fetch|undici|scrapy|phantomjs|puppeteer|playwright|selenium/i;
-
 // Order matters: most browsers also claim to be Chrome, and Chrome claims Safari.
 const BROWSERS: [string, RegExp][] = [
   ['LinkedIn app', /LinkedInApp(?:\/([\d.]+))?/],
@@ -18,10 +16,6 @@ const BROWSERS: [string, RegExp][] = [
 ];
 
 const WINDOWS: Record<string, string> = { '10.0': '10 or 11', '6.3': '8.1', '6.2': '8', '6.1': '7' };
-
-export function isBot(userAgent: string) {
-  return !userAgent || BOT.test(userAgent);
-}
 
 export function parseUserAgent(ua: string): { browser: string; browserVersion: string; os: string; device: DeviceType } {
   let browser = 'Other';

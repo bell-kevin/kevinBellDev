@@ -1,4 +1,5 @@
 import type { Visit } from '../analytics/types';
+import type { VisitInsight } from './signals';
 
 const numberFormat = new Intl.NumberFormat();
 const compactFormat = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 });
@@ -75,7 +76,7 @@ export function source(visit: Visit) {
     }
   }
   if (visit.utm.source) return visit.utm.source;
-  return visit.js ? 'Direct' : 'Unknown (no JavaScript)';
+  return visit.js ? 'Direct / no referrer' : 'Unknown (pixel request)';
 }
 
 export function browserName(visit: Visit) {
@@ -87,5 +88,15 @@ export function deviceName(visit: Visit) {
 }
 
 export function visitorKey(visit: Visit) {
-  return visit.visitor || `${visit.ip} ${visit.userAgent}`;
+  // A shared IP and user agent are not a stable browser identity.
+  return visit.visitor ? `browser:${visit.visitor}` : `visit:${visit.id}`;
+}
+
+export function returnLabel(value: VisitInsight['returning']) {
+  return {
+    returning: 'Return visit',
+    'first-observed': 'First observed',
+    possible: 'Possible repeat',
+    unknown: 'Return unknown',
+  }[value];
 }

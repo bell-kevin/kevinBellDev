@@ -27,6 +27,26 @@ export interface LinkClick {
   at: number;
 }
 
+/** Allowlisted request headers; absent on older visits or when not sent. */
+export interface RequestEvidence {
+  accept?: string;
+  acceptLanguage?: string;
+  referer?: string;
+  fetchDest?: string;
+  fetchMode?: string;
+  fetchSite?: string;
+  fetchUser?: string;
+  clientUa?: string;
+  clientPlatform?: string;
+  clientMobile?: string;
+  purpose?: string;
+}
+
+export interface AutomationEvidence {
+  /** A positive signal of automation; false does not establish a human visit. */
+  webdriver?: boolean;
+}
+
 /**
  * What the browser sends. Every beacon carries the whole visit so far, so a
  * lost or reordered beacon costs nothing once a later one arrives.
@@ -37,6 +57,9 @@ export interface Beacon {
   id: string;
   /** Random id remembered in local storage to recognize returning visitors. */
   visitor: string;
+  /** Browser storage remembers an earlier visit; missing means unknown. */
+  returning?: boolean;
+  automation?: AutomationEvidence;
   /** Increases with every beacon, so the server keeps only the newest. */
   seq: number;
   referrer: string;
@@ -58,8 +81,11 @@ export type DeviceType = 'desktop' | 'mobile' | 'tablet' | 'unknown';
 export interface Visit {
   id: string;
   visitor: string;
+  returning?: boolean;
+  automation?: AutomationEvidence;
+  request?: RequestEvidence;
   seq: number;
-  /** False for browsers with JavaScript disabled, counted by a <noscript> image. */
+  /** False for GET pixel requests, including <noscript> images and direct fetches. */
   js: boolean;
   /** Server time of the first and latest beacon, in epoch milliseconds. */
   start: number;

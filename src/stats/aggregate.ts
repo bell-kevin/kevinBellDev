@@ -1,6 +1,7 @@
 import type { Visit } from '../analytics/types';
-import { browserName, deviceName, flag, languageName, source, visitorKey } from './format';
+import { browserName, deviceName, flag, languageName, returnLabel, source } from './format';
 import type { Atlas } from './geo';
+import { visitInsights, type VisitInsight } from './signals';
 
 /** The state and county outlines, which load after the rest of the page. */
 export type AtlasState = Atlas | 'loading' | 'error';
@@ -35,20 +36,23 @@ export interface Summary {
   clicks: number;
   countries: number;
   withoutJs: number;
+  measuredVisits: number;
+  unidentifiedVisits: number;
 }
 
-export function summarize(visits: Visit[]): Summary {
-  const perVisitor = new Map<string, number>();
-  for (const visit of visits) perVisitor.set(visitorKey(visit), (perVisitor.get(visitorKey(visit)) ?? 0) + 1);
+export function summarize(visits: Visit[], insights: Map<string, VisitInsight> = visitInsights(visits)): Summary {
+  const identified = visits.filter((visit) => visit.visitor);
   const measured = visits.filter((visit) => visit.js);
   return {
     visits: visits.length,
-    visitors: perVisitor.size,
-    returningVisitors: [...perVisitor.values()].filter((count) => count > 1).length,
+    visitors: new Set(identified.map((visit) => visit.visitor)).size,
+    returningVisitors: new Set(identified.filter((visit) => insights.get(visit.id)?.returning === 'returning').map((visit) => visit.visitor)).size,
     averageEngagedMs: measured.length ? measured.reduce((sum, visit) => sum + visit.engagedMs, 0) / measured.length : 0,
-    clicks: visits.reduce((sum, visit) => sum + visit.clicks.length, 0),
+    clicks: measured.reduce((sum, visit) => sum + visit.clicks.length, 0),
     countries: new Set(visits.map((visit) => visit.location.countryCode).filter(Boolean)).size,
     withoutJs: visits.length - measured.length,
+    measuredVisits: measured.length,
+    unidentifiedVisits: visits.length - identified.length,
   };
 }
 
@@ -89,9 +93,12 @@ const COUNTY_NOTES = {
   error: 'County outlines didn’t load. Reload the page to try again.',
 };
 
-export function breakdowns(visits: Visit[], atlas: AtlasState): Breakdown[] {
+export function breakdowns(visits: Visit[], atlas: AtlasState, insights: Map<string, VisitInsight> = visitInsights(visits)): Breakdown[] {
   const us = visits.filter((visit) => visit.location.countryCode === 'US');
   return [
+    { id: 'traffic', title: 'Automation signals', unit: 'visits', rows: simple(visits, (visit) => insights.get(visit.id)?.traffic.label ?? 'No automation signal') },
+    { id: 'collection', title: 'Collection method', unit: 'visits', rows: simple(visits, (visit) => visit.js ? 'JavaScript beacon' : 'Pixel request') },
+    { id: 'returns', title: 'Return signals', unit: 'visits', rows: simple(visits, (visit) => returnLabel(insights.get(visit.id)?.returning ?? 'unknown')) },
     {
       id: 'countries',
       title: 'Countries',
@@ -154,11 +161,12 @@ export function breakdowns(visits: Visit[], atlas: AtlasState): Breakdown[] {
       id: 'links',
       title: 'Links clicked',
       unit: 'clicks',
-      rows: tally(visits.flatMap((visit) => visit.clicks.map((click) => ({
+      rows: tally(visits.filter((visit) => visit.js).flatMap((visit) => visit.clicks.map((click) => ({
         key: `${click.href}|${click.section}`,
         label: click.label || click.href,
         detail: `${click.href} · ${click.section}`,
       })))),
+      note: visits.some((visit) => visit.js) ? undefined : 'Link clicks are not measured for pixel requests.',
     },
     { id: 'browsers', title: 'Browsers', unit: 'visits', rows: simple(visits, (visit) => visit.browser) },
     { id: 'versions', title: 'Browser versions', unit: 'visits', rows: simple(visits, browserName) },

@@ -113,13 +113,15 @@ export function demoStats(from: number, to: number): StatsResponse {
     const clicks: LinkClick[] = [];
     for (let c = 0; js && c < 4 && next() < 0.45; c++) clicks.push({ ...pick(LINKS), at: Math.round(next() * engagedMs) });
     const referrer = pick(REFERRERS);
+    const utm = referrer.includes('linkedin') && next() < 0.3 ? { source: 'linkedin', medium: 'social', campaign: 'profile' } : {};
+    const timeZone = next() < 0.95 ? timezone : 'UTC';
     visits.push({
       id: `${Math.floor(at).toString(36)}-demo${i.toString(36).padStart(8, '0')}`,
       visitor: js ? person.id : '',
-      seq: 3,
+      seq: js ? 3 : 0,
       js,
       start: Math.floor(at),
-      end: Math.floor(at + engagedMs + 2000),
+      end: Math.floor(at + (js ? engagedMs + 2000 : 0)),
       ip: `198.51.100.${(i * 7) % 250}`,
       location: { city: city || undefined, region: region || undefined, country, countryCode, postalCode: postalCode || undefined, timezone, latitude, longitude },
       browser,
@@ -127,18 +129,62 @@ export function demoStats(from: number, to: number): StatsResponse {
       os,
       device,
       userAgent,
-      referrer,
-      utm: referrer.includes('linkedin') && next() < 0.3 ? { source: 'linkedin', medium: 'social', campaign: 'profile' } : {},
-      language: person.language,
-      timeZone: next() < 0.95 ? timezone : 'UTC',
+      referrer: js ? referrer : '',
+      utm: js ? utm : {},
+      language: js ? person.language : '',
+      timeZone: js ? timeZone : '',
       screen: js ? screen : '',
       viewport: js ? screen.replace(/x(\d+)/, (_, h) => `x${Number(h) - 120}`) : '',
-      pages: [{ path: '/', title: 'Kevin Bell', at: 0 }],
+      pages: [{ path: '/', title: js ? 'Kevin Bell' : '', at: 0 }],
       clicks: clicks.sort((a, b) => a.at - b.at),
       engagedMs,
       maxScroll: js ? Math.min(100, Math.round(30 + next() * 80)) : 0,
     });
   }
+
+  // Keep representative evidence visible in every range, including Today.
+  // Documentation IP ranges avoid associating example activity with real users.
+  const example = (index: number, changes: Partial<Visit>): Visit => {
+    const at = Math.max(from, Math.min(now, to - 1) - (index + 1) * 60_000);
+    return {
+      ...visits[0],
+      id: `${Math.floor(at).toString(36)}-signal-demo-${index}`,
+      visitor: '',
+      seq: 0,
+      js: false,
+      start: at,
+      end: at + (changes.engagedMs ?? 0),
+      ip: `203.0.113.${index + 1}`,
+      browser: 'Chrome',
+      browserVersion: '140',
+      os: 'Windows 10 or 11',
+      device: 'desktop',
+      userAgent: CLIENTS[0][0][5],
+      referrer: '',
+      language: 'en-US',
+      utm: {},
+      timeZone: '',
+      screen: '',
+      viewport: '',
+      pages: [{ path: '/', title: '', at: 0 }],
+      clicks: [],
+      engagedMs: 0,
+      maxScroll: 0,
+      request: { accept: 'image/avif,image/webp,image/*,*/*;q=0.8', acceptLanguage: 'en-US,en;q=0.9', referer: 'https://kevinbell.dev/', fetchDest: 'image', fetchMode: 'no-cors', fetchSite: 'cross-site', clientPlatform: '"Windows"', clientMobile: '?0' },
+      ...changes,
+    };
+  };
+  visits.push(
+    example(0, { userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', browser: 'Googlebot', browserVersion: '2.1', os: 'Unknown', device: 'unknown' }),
+    example(1, { js: true, visitor: 'headless-demo-browser', userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36', os: 'Linux', automation: { webdriver: true }, request: { accept: '*/*', fetchDest: 'empty', fetchMode: 'cors', fetchSite: 'cross-site' } }),
+    example(2, { userAgent: '', browser: 'Unknown', browserVersion: '', os: 'Unknown', device: 'unknown', request: { accept: '*/*' }, language: '' }),
+    example(3, {}),
+    example(4, { js: true, visitor: 'return-demo-browser', returning: true, engagedMs: 38_000, maxScroll: 75, screen: '1920x1080', viewport: '1920x960', ip: '2001:db8:1234:5678:abcd:1234:5678:9012', request: { accept: '*/*', acceptLanguage: 'en-US,en;q=0.9', fetchDest: 'empty', fetchMode: 'cors', fetchSite: 'cross-site' } }),
+    example(5, { ip: '203.0.113.80' }),
+    example(6, { ip: '203.0.113.80' }),
+    example(7, { js: true, visitor: 'return-demo-browser', returning: false, engagedMs: 65_000, maxScroll: 100, screen: '1920x1080', viewport: '1920x960', request: { accept: '*/*', acceptLanguage: 'en-US,en;q=0.9', fetchDest: 'empty', fetchMode: 'cors', fetchSite: 'cross-site' } }),
+    example(8, { request: undefined }),
+  );
 
   return {
     viewer: { login: 'bell-kevin' },
