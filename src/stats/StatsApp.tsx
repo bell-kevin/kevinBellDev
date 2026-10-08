@@ -9,7 +9,7 @@ import { formatCompact, formatDuration, visitorKey } from './format';
 import type { Atlas } from './geo';
 import { visitInsights } from './signals';
 import { UsMap } from './usmap';
-import { VisitDialog, VisitsTable } from './visits';
+import { VisitDialog, VisitsList } from './visits';
 
 type State =
   | { status: 'loading' }
@@ -238,7 +238,7 @@ function Dashboard({ data, demo, range, refreshing, onRange, onRefresh }: {
           {lists.map((breakdown) => <BarList key={breakdown.id} breakdown={breakdown} />)}
         </div>
 
-        <VisitsTable key={`${range.id}-${trafficFilter}`} visits={filteredVisits} visitCounts={visitCounts} insights={insights} onOpen={setSelected} />
+        <VisitsList key={`${range.id}-${trafficFilter}`} visits={filteredVisits} visitCounts={visitCounts} insights={insights} onOpen={setSelected} />
         <VisitDialog visit={selected} related={related} insight={selected ? insights.get(selected.id) : undefined} onOpen={setSelected} onClose={() => setSelected(null)} />
 
         <p className="footnote">
